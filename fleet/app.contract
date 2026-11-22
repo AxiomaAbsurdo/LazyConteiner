@@ -260,7 +260,7 @@ component Fleet
                 if not collapsed
                   text "Containers" flex=1 min-width=0
                   text `${dash.attention}` font-size=12
-            button class=NavItem press=go("services") aria-label="Compose services" testId="nav-services"
+            button class=(page == "services" ? NavActive : NavItem) press=go("services") aria-label="Compose services" testId="nav-services"
               row align-items="center" gap=10 min-width=0
                 Icon(name="services")
                 if not collapsed
@@ -273,31 +273,31 @@ component Fleet
                 if not collapsed
                   text "Images" flex=1 min-width=0
                   text `${dash.totals.images}` font-size=12
-            button class=NavItem press=go("volumes") aria-label="Volumes" testId="nav-volumes"
+            button class=(page == "volumes" ? NavActive : NavItem) press=go("volumes") aria-label="Volumes" testId="nav-volumes"
               row align-items="center" gap=10 min-width=0
                 Icon(name="volumes")
                 if not collapsed
                   text "Volumes" flex=1 min-width=0
                   text `${dash.totals.volumes}` font-size=12
-            button class=NavItem press=go("networks") aria-label="Networks" testId="nav-networks"
+            button class=(page == "networks" ? NavActive : NavItem) press=go("networks") aria-label="Networks" testId="nav-networks"
               row align-items="center" gap=10 min-width=0
                 Icon(name="networks")
                 if not collapsed
                   text "Networks" flex=1 min-width=0
                   text `${dash.totals.networks}` font-size=12
-            button class=NavItem press=go("commands") aria-label="Custom commands" testId="nav-commands"
+            button class=(page == "commands" ? NavActive : NavItem) press=go("commands") aria-label="Custom commands" testId="nav-commands"
               row align-items="center" gap=10 min-width=0
                 Icon(name="terminal")
                 if not collapsed
                   text "Custom commands" flex=1 min-width=0
             if not collapsed
               text "SYSTEM" class=GroupTitle testId="group-system"
-            button class=NavItem press=go("host") aria-label="Host and systemd" testId="nav-host"
+            button class=(page == "host" ? NavActive : NavItem) press=go("host") aria-label="Host and systemd" testId="nav-host"
               row align-items="center" gap=10 min-width=0
                 Icon(name="host")
                 if not collapsed
                   text "Host & systemd" flex=1 min-width=0
-            button class=NavItem press=go("settings") aria-label="Settings" testId="nav-settings"
+            button class=(page == "settings" ? NavActive : NavItem) press=go("settings") aria-label="Settings" testId="nav-settings"
               row align-items="center" gap=10 min-width=0
                 Icon(name="settings")
                 if not collapsed
