@@ -1,4 +1,4 @@
-.PHONY: setup run demo test build check benchmark test-live test-input
+.PHONY: setup run demo test build check benchmark test-live test-input package package-check
 
 setup:
 	./scripts/exact-setup.sh
@@ -30,3 +30,9 @@ test-live:
 
 test-input: build
 	python3 scripts/native-input-test.py
+
+package:
+	python3 scripts/build-deb.py
+
+package-check:
+	python3 scripts/check-deb.py dist/lazyconteiner_1.0.0-1_amd64.deb

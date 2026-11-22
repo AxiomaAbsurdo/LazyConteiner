@@ -1,0 +1,133 @@
+#!/usr/bin/python3
+"""Launch the installed native UI and its private, unprivileged Docker bridge."""
+import argparse
+import fcntl
+import json
+import os
+from pathlib import Path
+import secrets
+import signal
+import socket
+import subprocess
+import sys
+import tempfile
+import time
+import urllib.request
+
+LIB = Path(__file__).resolve().parent.parent / 'lib/lazyconteiner'
+ADDRESS = ('127.0.0.1', 17878)
+
+
+def private_directory(path):
+    path.mkdir(parents=True, exist_ok=True, mode=0o700)
+    if path.is_symlink() or path.stat().st_uid != os.getuid():
+        raise RuntimeError(f'Expected a private directory owned by this user: {path}')
+    path.chmod(0o700)
+    return path
+
+
+def private_file(path):
+    fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC | os.O_NOFOLLOW, 0o600)
+    os.fchmod(fd, 0o600)
+    return os.fdopen(fd, 'w')
+
+
+def stop(process):
+    if process is not None and process.poll() is None:
+        process.terminate()
+        try:
+            process.wait(timeout=5)
+        except subprocess.TimeoutExpired:
+            process.kill()
+            process.wait()
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--demo', action='store_true', help='use sample data without Docker access')
+    parser.add_argument('--smoke-test', action='store_true', help='check packaged executables and demo bridge without opening a window')
+    parser.add_argument('--version', action='version', version='LazyConteiner ' + (LIB / 'VERSION').read_text().strip())
+    args = parser.parse_args()
+    if os.geteuid() == 0:
+        raise RuntimeError('Run LazyConteiner as your desktop user, without sudo.')
+    if not args.smoke_test and not (os.environ.get('DISPLAY') or os.environ.get('WAYLAND_DISPLAY')):
+        raise RuntimeError('An X11 or Wayland desktop session is required.')
+    for name in ('backend', 'ui'):
+        if not os.access(LIB / name, os.X_OK):
+            raise RuntimeError(f'Missing packaged executable: {LIB / name}')
+
+    cache = Path(os.environ.get('XDG_CACHE_HOME', Path.home() / '.cache'))
+    runtime = private_directory(Path(os.environ.get('XDG_RUNTIME_DIR', cache)) / 'lazyconteiner')
+    lock_fd = os.open(runtime / 'session.lock', os.O_RDWR | os.O_CREAT | os.O_NOFOLLOW, 0o600)
+    lock = os.fdopen(lock_fd, 'w')
+    try:
+        fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except BlockingIOError:
+        raise RuntimeError('LazyConteiner is already running. Close its window before starting another instance.') from None
+    # Do not attach to or stop an unrelated listener, including a development run.
+    with socket.socket() as probe:
+        probe.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        try:
+            probe.bind(ADDRESS)
+        except OSError:
+            raise RuntimeError('Port 17878 is already in use. Close the existing app or development run first.') from None
+
+    state = private_directory(Path(os.environ.get('XDG_STATE_HOME', Path.home() / '.local/state')) / 'lazyconteiner')
+    backend = ui = None
+    demo = args.demo or args.smoke_test
+    env = {key: value for key, value in os.environ.items() if not key.startswith('EXACT_')}
+    env.update(EXACT_ASSETS=str(LIB), EXACT_SIZE='1440x900')
+
+    def interrupted(signum, frame):
+        raise KeyboardInterrupt
+
+    signal.signal(signal.SIGTERM, interrupted)
+    with tempfile.TemporaryDirectory(prefix='session-', dir=runtime) as directory:
+        token = secrets.token_hex(32)
+        token_file = Path(directory) / 'exact/dev.axioma.lazyconteiner/data/session-token'
+        token_file.parent.mkdir(parents=True, mode=0o700)
+        with private_file(token_file) as stream:
+            stream.write(token)
+        with private_file(state / 'backend.log') as backend_log, private_file(state / 'ui.log') as ui_log:
+            try:
+                backend = subprocess.Popen([str(LIB / 'backend'), '--listen', '127.0.0.1:17878'] + (['--demo'] if demo else []),
+                    env={**env, 'LAZYCONTAINER_TOKEN': token}, cwd=Path.home(), stdout=backend_log, stderr=backend_log)
+                # An authenticated endpoint proves this is our bridge, not another listener.
+                request = urllib.request.Request('http://127.0.0.1:17878/api/config', headers={'X-LazyContainer-Token': token})
+                opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
+                for _ in range(100):
+                    if backend.poll() is not None:
+                        raise RuntimeError(f'Backend failed to start; see {state / "backend.log"}')
+                    try:
+                        with opener.open(request, timeout=0.3) as response:
+                            json.load(response)
+                        break
+                    except OSError:
+                        time.sleep(0.1)
+                else:
+                    raise RuntimeError(f'Backend did not become ready; see {state / "backend.log"}')
+                if args.smoke_test:
+                    print('PASS: packaged executables and authenticated demo backend; no Docker operations executed.')
+                    return 0
+                ui = subprocess.Popen([str(LIB / 'ui')], cwd=LIB, stdout=ui_log, stderr=ui_log,
+                    env={**env, 'XDG_DATA_HOME': directory})
+                while ui.poll() is None:
+                    if backend.poll() is not None:
+                        raise RuntimeError(f'Backend stopped unexpectedly; see {state / "backend.log"}')
+                    time.sleep(0.1)
+                if ui.returncode:
+                    raise RuntimeError(f'Native UI exited with status {ui.returncode}; see {state / "ui.log"}')
+                return 0
+            finally:
+                stop(ui)
+                stop(backend)
+
+
+if __name__ == '__main__':
+    try:
+        sys.exit(main())
+    except KeyboardInterrupt:
+        sys.exit(130)
+    except (OSError, RuntimeError) as error:
+        print(f'LazyConteiner: {error}', file=sys.stderr)
+        sys.exit(1)

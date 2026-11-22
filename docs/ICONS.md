@@ -1,4 +1,15 @@
-# Pagedone icons
+# Application and interface icons
+
+## Application icon
+
+The Debian desktop icon comes from the user-supplied `lazycontainers-icon.zip`.
+Its SVG, nine PNG sizes (16–512 px), and symbolic variant are stored unchanged in
+`packaging/icons/hicolor/`, with filenames matching `dev.axioma.lazyconteiner`.
+The package installs these into the system hicolor theme for desktop menus and
+app identity. The archive's sample launcher is not used: the existing desktop
+entry supplies the correct executable and window identity for this application.
+
+## Pagedone interface icons
 
 Source: https://pagedone.io/icons, retrieved 2026-11-22 with Obscura. These SVGs are bundled only for use in this application. Their source markup and geometry are preserved unchanged; Exact supplies display size and tint. They are not an independently distributed icon library.
 

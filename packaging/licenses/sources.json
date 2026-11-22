@@ -1,0 +1,131 @@
+{
+  "alloc-stdlib-0.3.0": [
+    {
+      "file": "dropbox_rust-alloc-no-stdlib/LICENSE",
+      "url": "https://raw.githubusercontent.com/dropbox/rust-alloc-no-stdlib/0a81fd6928ea3b33c8cd484aa4575d50ffb98012/LICENSE",
+      "sha256": "c0c56f26d9c051cac4d200c34c84e7ae9aaa853e01a982a1df08b09931e518ae"
+    }
+  ],
+  "drm-fourcc-2.2.0": [
+    {
+      "file": "danielzfranklin_drm-fourcc-rs/README.md",
+      "url": "https://raw.githubusercontent.com/danielzfranklin/drm-fourcc-rs/7b9f80060ffd4b35cd236437e65a17fb517d163c/README.md",
+      "sha256": "a21780d0c5a693890782b29d359f9c162c125beed1ca646c95efe1145bf40699"
+    },
+    {
+      "file": "danielzfranklin_drm-fourcc-rs/Cargo.toml",
+      "url": "https://raw.githubusercontent.com/danielzfranklin/drm-fourcc-rs/7b9f80060ffd4b35cd236437e65a17fb517d163c/Cargo.toml",
+      "sha256": "0660e17d634e5b8c2a82cd0b0328c42fbc6e8b77a9f37b85f49bfeba1f4931ca"
+    }
+  ],
+  "i_key_sort-0.10.3": [
+    {
+      "file": "iShape-Rust_iKeySort/LICENSE",
+      "url": "https://raw.githubusercontent.com/iShape-Rust/iKeySort/10a9a72f0cdae785dd2185896eed138b09945515/LICENSE",
+      "sha256": "47e00f18b265d350a2860d3899f17dd1c7689b966545e929df8ffa7033f5acdc"
+    }
+  ],
+  "i_overlay-4.5.2": [
+    {
+      "file": "iShape-Rust_iOverlay/LICENSE-APACHE",
+      "url": "https://raw.githubusercontent.com/iShape-Rust/iOverlay/9448d8da87e11f5b7aedcf994967b18ff640c734/LICENSE-APACHE",
+      "sha256": "59899c6091b540582ed617e8eeaac4919dc985ccfc35459ee9752b699be5205b"
+    },
+    {
+      "file": "iShape-Rust_iOverlay/LICENSE-MIT",
+      "url": "https://raw.githubusercontent.com/iShape-Rust/iOverlay/9448d8da87e11f5b7aedcf994967b18ff640c734/LICENSE-MIT",
+      "sha256": "260cc580f53a756821a0f35475e2cd6da790f8fed0efc058252fe1bed8f2689e"
+    }
+  ],
+  "profiling-1.0.18": [
+    {
+      "file": "aclysma_profiling/LICENSE-APACHE",
+      "url": "https://raw.githubusercontent.com/aclysma/profiling/8271551172eb6fa4cba47369aedd93790c623df9/LICENSE-APACHE",
+      "sha256": "10d30a673cd5e9349bdc02aeb48f14b3386d27d0da32df8f0a555d4aa16aa551"
+    },
+    {
+      "file": "aclysma_profiling/LICENSE-MIT",
+      "url": "https://raw.githubusercontent.com/aclysma/profiling/8271551172eb6fa4cba47369aedd93790c623df9/LICENSE-MIT",
+      "sha256": "c8167fdeeed46d3f244d3f85c5bf998ce889343691c32be2c61a8bc4b5c08333"
+    }
+  ],
+  "spirv-0.4.0_sdk-1.4.341.0": [
+    {
+      "file": "gfx-rs_rspirv/LICENSE",
+      "url": "https://raw.githubusercontent.com/gfx-rs/rspirv/8afc3d0ac8e158128cd1410bb2e4b4c26ab11bb4/LICENSE",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+    }
+  ],
+  "svg_fmt-0.4.5": [
+    {
+      "file": "nical_rust_debug/LICENSE",
+      "url": "https://raw.githubusercontent.com/nical/rust_debug/93f414cd572b5c2781df93dbdc068ed13443d05a/LICENSE",
+      "sha256": "7e98bed7f100747aaae7d82ab94fbe6b76fd6b84b09a3aaa413bff8196d0fbb1"
+    }
+  ],
+  "wasmi-2.0.0": [
+    {
+      "file": "wasmi-labs_wasmi/LICENSE-APACHE",
+      "url": "https://raw.githubusercontent.com/wasmi-labs/wasmi/2970aa871cc1001b57b267ccecdcd1e42306199e/LICENSE-APACHE",
+      "sha256": "f031c1608e4a19e8cbcc3394cdba838067e79189610227459e8ffcd669e6f52d"
+    },
+    {
+      "file": "wasmi-labs_wasmi/LICENSE-MIT",
+      "url": "https://raw.githubusercontent.com/wasmi-labs/wasmi/2970aa871cc1001b57b267ccecdcd1e42306199e/LICENSE-MIT",
+      "sha256": "172bc1497507c1c363496bc23b0f16de8fa8e94befa85db6c8d9fa790e0a8657"
+    }
+  ],
+  "wasmi_collections-2.0.0": [
+    {
+      "file": "wasmi-labs_wasmi/LICENSE-APACHE",
+      "url": "https://raw.githubusercontent.com/wasmi-labs/wasmi/2970aa871cc1001b57b267ccecdcd1e42306199e/LICENSE-APACHE",
+      "sha256": "f031c1608e4a19e8cbcc3394cdba838067e79189610227459e8ffcd669e6f52d"
+    },
+    {
+      "file": "wasmi-labs_wasmi/LICENSE-MIT",
+      "url": "https://raw.githubusercontent.com/wasmi-labs/wasmi/2970aa871cc1001b57b267ccecdcd1e42306199e/LICENSE-MIT",
+      "sha256": "172bc1497507c1c363496bc23b0f16de8fa8e94befa85db6c8d9fa790e0a8657"
+    }
+  ],
+  "wasmi_core-2.0.0": [
+    {
+      "file": "wasmi-labs_wasmi/LICENSE-APACHE",
+      "url": "https://raw.githubusercontent.com/wasmi-labs/wasmi/2970aa871cc1001b57b267ccecdcd1e42306199e/LICENSE-APACHE",
+      "sha256": "f031c1608e4a19e8cbcc3394cdba838067e79189610227459e8ffcd669e6f52d"
+    },
+    {
+      "file": "wasmi-labs_wasmi/LICENSE-MIT",
+      "url": "https://raw.githubusercontent.com/wasmi-labs/wasmi/2970aa871cc1001b57b267ccecdcd1e42306199e/LICENSE-MIT",
+      "sha256": "172bc1497507c1c363496bc23b0f16de8fa8e94befa85db6c8d9fa790e0a8657"
+    }
+  ],
+  "wasmi_ir-2.0.0": [
+    {
+      "file": "wasmi-labs_wasmi/LICENSE-APACHE",
+      "url": "https://raw.githubusercontent.com/wasmi-labs/wasmi/2970aa871cc1001b57b267ccecdcd1e42306199e/LICENSE-APACHE",
+      "sha256": "f031c1608e4a19e8cbcc3394cdba838067e79189610227459e8ffcd669e6f52d"
+    },
+    {
+      "file": "wasmi-labs_wasmi/LICENSE-MIT",
+      "url": "https://raw.githubusercontent.com/wasmi-labs/wasmi/2970aa871cc1001b57b267ccecdcd1e42306199e/LICENSE-MIT",
+      "sha256": "172bc1497507c1c363496bc23b0f16de8fa8e94befa85db6c8d9fa790e0a8657"
+    }
+  ],
+  "wasmparser-0.228.0": [
+    {
+      "file": "bytecodealliance_wasm-tools/LICENSE-APACHE",
+      "url": "https://raw.githubusercontent.com/bytecodealliance/wasm-tools/e66235859a6ec0502bf6f9dcc358953eda4cafcc/LICENSE-APACHE",
+      "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+    },
+    {
+      "file": "bytecodealliance_wasm-tools/LICENSE-Apache-2.0_WITH_LLVM-exception",
+      "url": "https://raw.githubusercontent.com/bytecodealliance/wasm-tools/e66235859a6ec0502bf6f9dcc358953eda4cafcc/LICENSE-Apache-2.0_WITH_LLVM-exception",
+      "sha256": "268872b9816f90fd8e85db5a28d33f8150ebb8dd016653fb39ef1f94f2686bc5"
+    },
+    {
+      "file": "bytecodealliance_wasm-tools/LICENSE-MIT",
+      "url": "https://raw.githubusercontent.com/bytecodealliance/wasm-tools/e66235859a6ec0502bf6f9dcc358953eda4cafcc/LICENSE-MIT",
+      "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3"
+    }
+  ]
+}

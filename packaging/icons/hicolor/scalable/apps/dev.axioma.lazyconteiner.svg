@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <title>LazyContainers</title>
+  <rect x="8" y="10" width="112" height="112" rx="26" fill="#060E1F" opacity="0.35"/>
+  <rect x="8" y="6" width="112" height="112" rx="26" fill="#10213F"/>
+  <rect x="8.75" y="6.75" width="110.5" height="110.5" rx="25.25" fill="none" stroke="#2B4473" stroke-width="1.5"/>
+  <g>
+    <rect x="24" y="80" width="80" height="22" rx="4" fill="#DCE6F7"/>
+    <path d="M52 85v12M59 85v12M66 85v12M73 85v12M80 85v12M87 85v12M94 85v12" stroke="#A9BBDA" stroke-width="2.4" stroke-linecap="round"/>
+    <circle cx="35" cy="91" r="4.5" fill="#8FA6CC"/>
+  </g>
+  <g>
+    <rect x="24" y="54" width="80" height="22" rx="4" fill="#DCE6F7"/>
+    <path d="M52 59v12M59 59v12M66 59v12M73 59v12M80 59v12M87 59v12M94 59v12" stroke="#A9BBDA" stroke-width="2.4" stroke-linecap="round"/>
+    <circle cx="35" cy="65" r="4.5" fill="#F0A35E"/>
+  </g>
+  <g transform="rotate(5 64 39) translate(5 0)">
+    <rect x="24" y="28" width="80" height="22" rx="4" fill="#FFFFFF"/>
+    <path d="M52 33v12M59 33v12M66 33v12M73 33v12M80 33v12M87 33v12M94 33v12" stroke="#A9BBDA" stroke-width="2.4" stroke-linecap="round"/>
+    <circle cx="35" cy="39" r="4.5" fill="#3FB950"/>
+  </g>
+  <path d="M84 16h7l-7 7h7" fill="none" stroke="#8FB6FF" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M96 11h5l-5 5h5" fill="none" stroke="#8FB6FF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" opacity="0.8"/>
+</svg>

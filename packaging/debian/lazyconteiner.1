@@ -1,0 +1,34 @@
+.TH LAZYCONTEINER 1 "November 2026" "LazyConteiner" "User Commands"
+.SH NAME
+lazyconteiner \- native desktop interface for local Docker
+.SH SYNOPSIS
+.B lazyconteiner
+.RB [ --demo | --smoke-test | --version ]
+.SH DESCRIPTION
+Starts the native Exact UI and an authenticated loopback Docker bridge as the
+current desktop user. The bridge stops when the window closes. Closing the
+application does not stop Docker containers.
+.SH OPTIONS
+.TP
+.B --demo
+Use isolated sample data without accessing Docker.
+.TP
+.B --smoke-test
+Check packaged executables and the authenticated demo bridge without opening a window.
+.TP
+.B --version
+Print the installed application version.
+.SH FILES
+.I ~/.config/lazyconteiner/config.json
+stores project paths, terminal settings and custom commands. XDG_CONFIG_HOME
+overrides the default directory.
+.PP
+.I ~/.local/state/lazyconteiner/
+contains private backend.log and ui.log files. XDG_STATE_HOME overrides this path.
+.SH NOTES
+Run without sudo. Docker access must already be configured for the current user.
+Only local Unix Docker sockets are supported. Compose and interactive terminal
+operations require the Docker CLI, Compose plugin and a terminal emulator.
+.SH SEE ALSO
+.BR docker (1),
+.BR apt (8)

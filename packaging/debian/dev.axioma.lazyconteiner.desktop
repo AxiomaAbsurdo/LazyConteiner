@@ -1,0 +1,15 @@
+[Desktop Entry]
+Type=Application
+Name=LazyConteiner
+Comment=Manage local Docker containers, Compose projects, images and volumes
+Exec=lazyconteiner
+Icon=dev.axioma.lazyconteiner
+Terminal=false
+Categories=System;
+Keywords=Docker;Containers;Compose;
+StartupWMClass=dev.axioma.lazyconteiner
+Actions=Demo;
+
+[Desktop Action Demo]
+Name=Open isolated demo
+Exec=lazyconteiner --demo

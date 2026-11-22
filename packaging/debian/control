@@ -1,0 +1,14 @@
+Source: lazyconteiner
+Section: utils
+Priority: optional
+Maintainer: AxiomaAbsurdo <AxiomaAbsurdo@users.noreply.github.com>
+Standards-Version: 4.7.2
+Homepage: https://github.com/AxiomaAbsurdo/LazyConteiner
+
+Package: lazyconteiner
+Architecture: amd64
+Description: native desktop interface for local Docker and Compose
+ Manage containers, Compose projects, images, volumes and networks through
+ a native Exact interface backed by Lazydocker. Actions use exact-target
+ confirmation. Interactive operations open the user's terminal emulator.
+ The application runs as the desktop user and never installs a system daemon.

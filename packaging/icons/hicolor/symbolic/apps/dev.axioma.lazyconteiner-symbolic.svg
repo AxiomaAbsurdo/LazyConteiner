@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16">
+  <title>LazyContainers</title>
+  <g fill="#2e3436" fill-rule="evenodd">
+    <path d="M2 10.5h12a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1v-2a1 1 0 0 1 1-1zM3.5 11.5a1 1 0 1 0 0 2 1 1 0 0 0 0-2z"/>
+    <path d="M2 6h12a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1zM3.5 7a1 1 0 1 0 0 2 1 1 0 0 0 0-2z"/>
+    <path transform="rotate(5 8.5 3)" d="M3 1.5h11a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1v-2a1 1 0 0 1 1-1zM4.5 2.5a1 1 0 1 0 0 2 1 1 0 0 0 0-2z"/>
+  </g>
+</svg>

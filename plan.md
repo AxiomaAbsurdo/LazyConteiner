@@ -1,5 +1,24 @@
 # Full Lazydocker frontend implementation
 
+## Debian installer iteration
+
+Prepare and publish the first native Debian 13 amd64 production release, authorized by the user after candidate validation.
+The requested Debian skills are installed. Warp and wraplinux were evaluated;
+APT integration favors a native `.deb`, while wraplinux targets boot images.
+The user selected MIT for the application's own code.
+
+- [x] Build the production native GUI and static Go backend.
+- [x] Add an unprivileged installed launcher, desktop entry, dependency metadata and notices.
+- [x] Build `dist/lazyconteiner_1.0.0-1_amd64.deb` and its checksum.
+- [x] Verify package ownership, integrity, dependency resolution and extracted execution without developer tools.
+- [x] Verify restart, occupied-port/duplicate refusal, credentials and process cleanup.
+- [x] Verify physical sidebar clicks and rendering from the extracted package.
+- [ ] Install/remove and upgrade on a clean Debian 13 desktop.
+- [ ] Complete the user's Docker and terminal testing rounds.
+- Release preparation: README, contribution guide, PayPal support, production installer, five native screenshots and video-agent kit are ready. Publication status is recorded in GitHub Releases.
+
+See `docs/PACKAGING.md` for commands and `docs/PACKAGING-VALIDATION.md` for evidence.
+
 ## Current scope
 
 Fix physical mouse clicks, expose the pinned Lazydocker feature inventory through Exact, and validate responsive layout and performance. Semantic driver taps do not prove native input delivery.
