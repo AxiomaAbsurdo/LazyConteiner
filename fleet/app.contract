@@ -1,0 +1,426 @@
+shape Container
+  id: string            // docker container id (short)
+  name: string
+  stack: string         // compose project label, or "" for standalone
+  state: string         // "running" | "exited" | "paused" | "created" | "restarting"
+  exitCode: number      // -1 when running
+  ports: string         // "127.0.0.1:8000→8000" or "—"
+  cpu: string           // "0.01%"
+  selected: bool        // UI selection, kept in app.ts store
+
+shape Stack
+  id: string            // "kodus", "openhands", "__standalone"
+  name: string          // display name; "Standalone containers" for __standalone
+  isCompose: bool
+  running: number
+  total: number
+  status: string        // "Running" | "Partial" | "Stopped"
+  containers: Container[]
+
+shape AlertItem
+  id: string
+  name: string
+  exitCode: number
+
+shape Alert
+  id: string            // "oom" | "crash" | …
+  title: string         // "4 containers were killed (exit 137)"
+  hint: string
+  cta: string           // "Restart all 4" | "Remove all 5…"
+  ctaAction: string     // "restart" | "remove"
+  tone: string          // "warn" | "neutral"
+  items: AlertItem[]
+
+shape Totals
+  containers: number
+  running: number
+  failed: number
+  cleanExit: number
+  images: number
+  imagesSize: string
+  imagesUnused: number
+  volumes: number
+  volumesUnused: number
+  networks: number
+  networksDetail: string   // "7 bridge · host · none"
+
+shape Meter
+  label: string            // "CPU" | "Memory" | "/var/lib/docker"
+  valueText: string        // "12%" | "6.1 GB / 16 GB"
+  percent: number          // 0–100
+  warn: bool               // true above 60%
+
+shape Consumer
+  id: string
+  name: string
+  cpu: string
+
+shape Event
+  id: string
+  name: string
+  what: string             // "died · exit 137" | "started"
+  tone: string             // "warn" | "ok" | "neutral"
+  at: string               // "14:02"
+
+shape CleanupItem
+  id: string               // "containers" | "images" | "volumes" | "cache"
+  label: string
+  size: string
+  checked: bool
+  dangerous: bool          // volumes = true
+
+shape Environment
+  id: string
+  label: string            // "local · Debian"
+  connected: bool
+  detail: string           // "connected · local socket"
+
+shape Dashboard
+  warnings: string[]
+  mode: string
+  error: string
+  updatedAt: string
+  env: Environment
+  envs: Environment[]
+  totals: Totals
+  alerts: Alert[]
+  stacks: Stack[]
+  selectedCount: number
+  host: Meter[]
+  serviceActive: bool
+  consumers: Consumer[]
+  events: Event[]
+  cleanup: CleanupItem[]
+  unread: number
+  attention: number        // badge on Containers nav item
+
+shape Change
+  count: number
+
+shape Reply
+  ok: bool
+  error: string
+
+style Card
+  background-color="light-dark(#FFFFFF, #161A20)" border="1px solid light-dark(#E2E5EA, #262B33)" border-radius=12 padding=18 gap=12
+style Muted
+  color="light-dark(#5B6472, #9AA3AE)" font-size=13
+style NavItem
+  min-height=24 padding="10px 12px" border-radius=8 color="#DCE6F7" text-align="start"
+style NavActive
+  min-height=24 padding="10px 12px" border-radius=8 color="#FFFFFF" background-color="#1F3A6B" text-align="start"
+style GroupTitle
+  color="#8FA6CC" font-size=11 letter-spacing=1 padding="16px 12px 4px"
+style Status
+  padding="4px 8px" border-radius=6 font-size=12 background-color="light-dark(#EEF0F3, #2A3140)"
+
+fn pageTitle(id: string): string = id == "dashboard" ? "Dashboard" : id == "events" ? "Events" : id == "stacks" ? "Stacks" : id == "containers" ? "Containers" : id == "images" ? "Images" : id == "volumes" ? "Volumes" : id == "networks" ? "Networks" : id == "host" ? "Host & systemd" : id == "settings" ? "Settings" : id == "templates" ? "Templates" : "Registries"
+
+component Fleet
+  state collapsed = false
+  state page = "dashboard"
+  state filter = "all"
+  state query = ""
+  state live = true
+  state showDismissed = false
+  state notice = ""
+  state confirmId = ""
+  state confirmName = ""
+  state confirmOp = ""
+  resource dash = dashboard(filter, query, showDismissed) as shape Dashboard else empty()
+  mutation changed as shape Reply refreshes dash
+  derive operationError = match changed { case some(r) => r.error, case none => "" }
+  task poll mount
+    every(2000, tick)
+  action tick
+    if live
+      refresh dash
+  action refreshNow
+    refresh dash
+  action toggleNav
+    collapsed = not collapsed
+  action go(id: string)
+    page = id
+    notice = ""
+  action toggleLive
+    live = not live
+  action setFilter(value: string)
+    filter = value
+  action search(value: string)
+    query = value
+  action select(id: string, on: bool)
+    send changed = setSelected(id, on)
+  action clearSelection
+    send changed = clearSelected()
+  action askContainer(id: string, name: string, op: string)
+    confirmId = id
+    confirmName = name
+    confirmOp = op
+    showModal("operation")
+  action execute
+    send changed = containerOp(confirmId, confirmOp)
+    close("operation")
+  action cancelOperation
+    close("operation")
+  action askBulk(op: string)
+    confirmId = "__selected"
+    confirmName = `${dash.selectedCount} selected containers`
+    confirmOp = op
+    showModal("operation")
+  action dismiss(id: string)
+    send changed = dismissAlert(id)
+  action restoreAlerts
+    showDismissed = not showDismissed
+  action toggleCleanup(id: string, on: bool)
+    send changed = setCleanup(id, on)
+  action dryRun
+    send changed = previewCleanup()
+  action explain(message: string)
+    notice = message
+
+  view
+    row testId="app" height="100%" background-color="light-dark(#F5F6F8, #0F1115)" color="light-dark(#16191F, #E6E8EB)"
+      column testId="sidebar" role="navigation" aria-label="Main" width=(collapsed ? 48 : 224) min-height=0 flex-shrink=0 padding=12 background-color="#10213F" gap=3
+        row testId="brand" min-height=52 align-items="center" gap=10 padding=10
+          text "▦" color="#7DB4FF" font-size=27
+          if not collapsed
+            text "LazyConteiner" color="#FFFFFF" font-size=19 font-weight=700
+        scroll flex=1 min-height=0 testId="nav-scroll"
+          column gap=3
+            if not collapsed
+              text "OVERVIEW" class=GroupTitle testId="group-overview"
+            button class=(page == "dashboard" ? NavActive : NavItem) press=go("dashboard") aria-label="Dashboard" testId="nav-dashboard"
+              text (collapsed ? "▦" : "▦   Dashboard")
+            button class=(page == "events" ? NavActive : NavItem) press=go("events") aria-label="Events" testId="nav-events"
+              text (collapsed ? "≋" : "≋   Events")
+            if not collapsed
+              text "WORKLOADS" class=GroupTitle testId="group-workloads"
+            button class=(page == "stacks" ? NavActive : NavItem) press=go("stacks") aria-label="Stacks" testId="nav-stacks"
+              text (collapsed ? "◇" : `◇   Stacks       ${dash.stacks.length}`)
+            button class=(page == "containers" ? NavActive : NavItem) press=go("containers") aria-label="Containers" testId="nav-containers"
+              text (collapsed ? "□" : `□   Containers       ${dash.attention}`)
+            button class=NavItem press=go("templates") aria-label="Templates" testId="nav-templates"
+              text (collapsed ? "⊞" : "⊞   Templates")
+            if not collapsed
+              text "RESOURCES" class=GroupTitle testId="group-resources"
+            button class=(page == "images" ? NavActive : NavItem) press=go("images") aria-label="Images" testId="nav-images"
+              text (collapsed ? "▧" : `▧   Images       ${dash.totals.images}`)
+            button class=NavItem press=go("volumes") aria-label="Volumes" testId="nav-volumes"
+              text (collapsed ? "⊙" : `⊙   Volumes       ${dash.totals.volumes}`)
+            button class=NavItem press=go("networks") aria-label="Networks" testId="nav-networks"
+              text (collapsed ? "⋈" : `⋈   Networks       ${dash.totals.networks}`)
+            button class=NavItem press=go("registries") aria-label="Registries" testId="nav-registries"
+              text (collapsed ? "▱" : "▱   Registries")
+            if not collapsed
+              text "SYSTEM" class=GroupTitle testId="group-system"
+            button class=NavItem press=go("host") aria-label="Host and systemd" testId="nav-host"
+              text (collapsed ? "▤" : "▤   Host & systemd")
+            button class=NavItem press=go("settings") aria-label="Settings" testId="nav-settings"
+              text (collapsed ? "⚙" : "⚙   Settings")
+        if not collapsed
+          column padding=12 gap=5 testId="engine-status"
+            text "Docker Engine" color="#DCE6F7" font-weight=600
+            text dash.env.detail color="#8FA6CC" font-size=12
+        button class=NavItem press=toggleNav aria-label=(collapsed ? "Expand sidebar" : "Collapse sidebar") testId="nav-toggle"
+          text (collapsed ? "›" : "‹   Collapse")
+      column flex=1 min-width=0
+        row testId="topbar" padding="12px 24px" gap=16 align-items="center" flex-wrap="wrap" background-color="light-dark(#FFFFFF, #161A20)" border-bottom="1px solid light-dark(#E2E5EA, #262B33)"
+          text (dash.mode == "demo" ? "DEMO · fixture data" : "local · Debian") font-weight=600 testId="environment"
+          text `/ ${pageTitle(page)}` testId="breadcrumb"
+          column flex=1
+          button press=refreshNow testId="refresh" disabled=pending(dash)
+            text "Refresh"
+          button press=toggleLive testId="live-toggle" aria-pressed=live
+            text (live ? "Live" : "Paused")
+        scroll flex=1 min-height=0 padding=24
+          column gap=20
+            row align-items="center" gap=16 flex-wrap="wrap"
+              column flex=1 gap=6
+                text pageTitle(page) font-size=28 font-weight=700 role="heading" aria-level=1 testId="page-title"
+                text (live ? "Refreshes every 2 seconds · local Docker socket" : "Updates paused · numbers may be stale") class=Muted testId="page-subtitle"
+              text "Iteration 01" class=Status
+            if failed(dash)
+              column class=Card testId="connection-error"
+                text "Cannot reach Docker backend. Start it, check socket permissions, then retry." color="light-dark(#8A4500, #F0A35E)"
+                text "Any retained values below may be stale." class=Muted
+                button press=refreshNow testId="retry"
+                  text "Retry connection"
+            else if not current(dash)
+              text "Connecting to Docker…" testId="loading"
+            for warning in dash.warnings key=warning
+              text warning class=Muted testId=`warning-${warning}`
+            if operationError != ""
+              text operationError color="light-dark(#8A4500, #F0A35E)" testId="operation-message"
+            if notice != ""
+              text notice class=Card testId="notice"
+            if page == "dashboard"
+              row gap=16 flex-wrap="wrap"
+                button class=Card flex=1 min-width=180 press=go("containers") testId="kpi-containers"
+                  column gap=8 align-items="start"
+                    text "Containers" class=Muted
+                    text `${dash.totals.containers}` font-size=34 font-weight=700
+                    text `${dash.totals.running} running · ${dash.totals.failed} failed` font-size=12
+                    text `${dash.totals.cleanExit} clean exit` class=Muted
+                button class=Card flex=1 min-width=180 press=go("images") testId="kpi-images"
+                  column gap=8 align-items="start"
+                    text "Images" class=Muted
+                    text `${dash.totals.images}` font-size=34 font-weight=700
+                    text `${dash.totals.imagesSize} · ${dash.totals.imagesUnused} unused` class=Muted
+                button class=Card flex=1 min-width=180 press=go("volumes") testId="kpi-volumes"
+                  column gap=8 align-items="start"
+                    text "Volumes" class=Muted
+                    text `${dash.totals.volumes}` font-size=34 font-weight=700
+                    text `${dash.totals.volumesUnused} unused` class=Muted
+                button class=Card flex=1 min-width=180 press=go("networks") testId="kpi-networks"
+                  column gap=8 align-items="start"
+                    text "Networks" class=Muted
+                    text `${dash.totals.networks}` font-size=34 font-weight=700
+                    text dash.totals.networksDetail class=Muted
+              row align-items="center"
+                text "Needs attention" font-size=17 font-weight=600 flex=1
+                button press=restoreAlerts testId="alerts-restore"
+                  text (showDismissed ? "Hide dismissed" : "Show dismissed")
+              if dash.alerts.length == 0
+                text "Nothing needs attention." class=Card testId="alerts-empty"
+              for alert in dash.alerts key=alert.id
+                AlertCard(alert=alert, dismiss=dismiss)
+              row gap=16 align-items="start" flex-wrap="wrap"
+                column class=Card flex=2 min-width=390 testId="stacks-panel"
+                  row gap=10 align-items="center" flex-wrap="wrap"
+                    text "Stacks" font-size=18 font-weight=600 flex=1
+                    button press=setFilter("all") aria-pressed=(filter == "all") testId="filter-all"
+                      text "All"
+                    button press=setFilter("running") aria-pressed=(filter == "running") testId="filter-running"
+                      text "Running"
+                    button press=setFilter("stopped") aria-pressed=(filter == "stopped") testId="filter-stopped"
+                      text "Stopped"
+                  input value=query input=search placeholder="Filter containers" aria-label="Filter containers" testId="stacks-search"
+                  if dash.selectedCount > 0
+                    row gap=8 flex-wrap="wrap" testId="bulk-bar" background-color="light-dark(#E8EFFC, #1A2333)" padding=8
+                      text `${dash.selectedCount} selected`
+                      button press=askBulk("start") testId="bulk-start"
+                        text "Start"
+                      button press=askBulk("stop") testId="bulk-stop"
+                        text "Stop"
+                      button press=askBulk("restart") testId="bulk-restart"
+                        text "Restart"
+                      button press=clearSelection testId="bulk-clear"
+                        text "Clear"
+                  if dash.stacks.length == 0
+                    text "No containers match this filter." class=Muted testId="stacks-empty"
+                  for stack in dash.stacks key=stack.id
+                    StackGroup(stack=stack, select=select, askContainer=askContainer, busy=pending(changed))
+                column flex=1 min-width=270 gap=16
+                  column class=Card testId="host-panel"
+                    text "Host" font-size=18 font-weight=600 testId="host-header"
+                    text (dash.serviceActive ? "Docker Engine reachable" : "Docker Engine unavailable") class=Muted
+                    for meter in dash.host key=meter.label
+                      column gap=6 testId=`meter-${meter.label}`
+                        row
+                          text meter.label flex=1 font-size=13
+                          text meter.valueText font-size=13
+                        row height=7 background-color="light-dark(#EEF0F3, #2A3140)" border-radius=4 overflow="hidden"
+                          column width=`${meter.percent}%` background-color=(meter.warn ? "#B25A00" : "#1F5FD6")
+                    if dash.host.length == 0
+                      text "Host metrics are planned." class=Muted
+                    text "Top consumers" font-weight=600 font-size=13
+                    for consumer in dash.consumers key=consumer.id
+                      row gap=8
+                        text consumer.name flex=1 min-width=0 font-family="monospace" font-size=12
+                        text consumer.cpu font-size=12
+                  column class=Card testId="events-panel"
+                    row
+                      text "Recent events" font-size=18 font-weight=600 flex=1
+                      button press=go("events") testId="events-all"
+                        text "View all"
+                    if dash.events.length == 0
+                      text "Event collection is planned." class=Muted
+                    for event in dash.events key=event.id
+                      column gap=3 testId=`event-${event.id}`
+                        text event.name font-family="monospace" font-size=12
+                        text `${event.what} · ${event.at}` class=Muted
+                  column class=Card testId="cleanup-panel"
+                    text "Cleanup" font-size=18 font-weight=600
+                    for item in dash.cleanup key=item.id
+                      row gap=8 align-items="center"
+                        input type="checkbox" checked=item.checked change=toggleCleanup(item.id) aria-label=item.label testId=`cleanup-${item.id}`
+                        text item.label flex=1 font-size=13
+                        text item.size class=Muted
+                    text "Volumes are off by default. Removing them deletes data." class=Muted testId="cleanup-warning"
+                    button press=dryRun testId="cleanup-dryrun"
+                      text "Preview cleanup"
+                    text "Preview only. This iteration never prunes data." class=Muted
+            else if page == "events"
+              column class=Card
+                for event in dash.events key=event.id
+                  text `${event.at} · ${event.name} · ${event.what}` testId=`full-event-${event.id}`
+                if dash.events.length == 0
+                  text "Event collection is planned."
+            else if page == "settings"
+              column class=Card
+                text "Local Docker" role="heading" aria-level=2
+                text "Access to the Docker socket grants root-equivalent control. Use rootless Docker when appropriate."
+                text "Only local Docker is available in this iteration. Remote hosts and Podman are not connected."
+            else
+              column class=Card testId="placeholder"
+                text `${pageTitle(page)} view is planned. This iteration focuses on Dashboard.`
+                button press=go("dashboard") testId="back-dashboard"
+                  text "Back to Dashboard"
+      dialog id="operation" role="alertdialog" aria-label="Confirm container operation"
+        text `${confirmOp} ${confirmName}?` testId="operation-target"
+        text "Stopping or restarting containers can interrupt their services."
+        button press=execute commandfor="operation" command="close" testId="operation-confirm" disabled=pending(changed)
+          text "Confirm"
+        button press=cancelOperation commandfor="operation" command="close" testId="operation-cancel"
+          text "Cancel"
+
+component AlertCard
+  props
+    alert: Alert
+    dismiss: action
+  state open = false
+  action toggleOpen
+    open = not open
+  view
+    column class=Card background-color="light-dark(#FFF8F0, #2A1C14)" testId=`alert-${alert.id}`
+      row gap=12 align-items="center" flex-wrap="wrap"
+        text "!" font-size=22 color="light-dark(#8A4500, #F0A35E)"
+        column flex=1 min-width=200 gap=5
+          text alert.title font-weight=600 testId=`alert-${alert.id}-title`
+          text alert.hint class=Muted
+        button press=toggleOpen testId=`alert-${alert.id}-toggle` aria-expanded=open
+          text (open ? "Hide" : `Show ${alert.items.length}`)
+        button press=dismiss(alert.id) aria-label="Dismiss alert" testId=`alert-${alert.id}-dismiss`
+          text "×"
+      if open
+        for item in alert.items key=item.id
+          text `${item.name} · exit ${item.exitCode}` font-family="monospace" font-size=12 testId=`alert-${alert.id}-item-${item.id}`
+
+component StackGroup
+  props
+    stack: Stack
+    select: action
+    askContainer: action
+    busy: bool
+  state open = true
+  action toggleStack
+    open = not open
+  view
+    column gap=6 testId=`stack-${stack.id}`
+      row gap=8 align-items="center" background-color="light-dark(#F5F6F8, #22262E)" padding=10
+        button press=toggleStack aria-label=`Toggle ${stack.name}` aria-expanded=open testId=`stack-${stack.id}-toggle`
+          text (open ? "⌄" : "›")
+        column flex=1 min-width=0 gap=3
+          text stack.name font-weight=600 testId=`stack-${stack.id}-name`
+          text `${stack.running} of ${stack.total} running` class=Muted
+        text stack.status class=Status testId=`stack-${stack.id}-status`
+      if open
+        for container in stack.containers key=container.id
+          column padding="8px 0" gap=4
+            row gap=8 align-items="center" flex-wrap="wrap"
+              input type="checkbox" checked=container.selected change=select(container.id) aria-label=`Select ${container.name}` testId=`row-${container.id}-select`
+              text container.name font-family="monospace" font-size=13 flex=1 min-width=150 testId=`row-${container.id}-name`
+              text (container.state == "running" ? "Running" : `${container.state} (${container.exitCode})`) class=Status color=(container.state == "running" ? "light-dark(#1A7F37, #7EE2A0)" : "light-dark(#8A4500, #F0A35E)") testId=`row-${container.id}-state`
+              button press=askContainer(container.id, container.name, container.state == "running" ? "restart" : "start") disabled=busy testId=`row-${container.id}-action`
+                text (container.state == "running" ? "Restart" : "Start")
+            text container.ports class=Muted padding-left=26 testId=`row-${container.id}-ports`

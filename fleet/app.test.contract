@@ -1,0 +1,62 @@
+// Run only against the isolated --demo backend; never against live Docker.
+test "dashboard navigation and pause"
+  clock data
+  expect text "environment" == "DEMO · fixture data"
+  expect tree has "stacks-panel"
+  tap "nav-toggle"
+  expect tree missing "group-overview"
+  tap "nav-toggle"
+  expect tree has "group-overview"
+  tap "nav-images"
+  expect text "breadcrumb" == "/ Images"
+  expect tree has "placeholder"
+  tap "nav-dashboard"
+  tap "live-toggle"
+  expect text "live-toggle" == "Paused"
+
+test "filter, selection and confirmation cancellation"
+  clock data
+  tap "filter-running"
+  clock data
+  expect tree missing "stack-kodus"
+  expect tree has "stack-openhands"
+  tap "filter-all"
+  clock data
+  expect tree has "stack-kodus"
+  tap "row-demo-api-select"
+  clock data
+  expect tree has "bulk-bar"
+  tap "bulk-start"
+  expect text "operation-target" == "start 1 selected containers?"
+  tap "operation-cancel"
+  tap "filter-running"
+  clock data
+  expect tree missing "stack-kodus"
+  tap "filter-all"
+  clock data
+  tap "bulk-clear"
+  clock data
+  expect tree missing "bulk-bar"
+
+test "alerts and safe cleanup preview"
+  clock data
+  tap "alert-failed-toggle"
+  expect tree has "alert-failed-item-demo-api"
+  tap "alert-failed-dismiss"
+  clock data
+  expect tree missing "alert-failed"
+  tap "alerts-restore"
+  clock data
+  expect tree has "alert-failed"
+  tap "cleanup-dryrun"
+  clock data
+  expect tree has "operation-message"
+
+test "confirmation releases the dashboard"
+  clock data
+  tap "row-demo-api-action"
+  tap "operation-confirm"
+  clock data
+  tap "filter-running"
+  clock data
+  expect state filter == "running"

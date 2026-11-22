@@ -1,0 +1,22 @@
+{
+  "host": {
+    "web": {},
+    "linux": {}
+  },
+  "deploy": {
+    "store": {
+      "web": "0",
+      "linux": "0"
+    }
+  },
+  "$schema": ".exact/checkout/scripts/app.schema.json",
+  "name": "LazyConteiner",
+  "short_name": "LazyConteiner",
+  "id": "dev.axioma.lazyconteiner",
+  "start_url": "/",
+  "display": "standalone",
+  "app": {
+    "id": "dev.axioma.lazyconteiner",
+    "name": "LazyConteiner"
+  }
+}
