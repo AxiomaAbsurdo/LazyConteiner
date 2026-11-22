@@ -1,0 +1,371 @@
+shape WindowSize
+  width: number
+  height: number
+
+shape InventoryItem
+  id: string
+  name: string
+  state: string
+  detail: string
+  project: string
+  service: string
+
+shape Capability
+  id: string
+  label: string
+  destructive: bool
+  input: string
+
+shape DetailView
+  id: string
+  label: string
+
+shape Inventory
+  kind: string
+  items: InventoryItem[]
+  actions: Capability[]
+  views: DetailView[]
+  mode: string
+  error: string
+
+shape Metric
+  label: string
+  value: string
+  percent: number
+  history: number[]
+
+shape Detail
+  metrics: Metric[]
+  title: string
+  text: string
+  mode: string
+  owner: string
+  error: string
+
+shape Target
+  id: string
+  name: string
+
+shape Preview
+  confirmation: string
+  summary: string
+  targets: Target[]
+  expiresAt: string
+  error: string
+
+shape Execution
+  count: number
+  mode: string
+  text: string
+  jobId: string
+  error: string
+
+shape Job
+  id: string
+  status: string
+  text: string
+  error: string
+
+shape Configuration
+  text: string
+  path: string
+  error: string
+
+shape Saved
+  ok: bool
+  error: string
+
+style Panel
+  background-color="light-dark(#FFFFFF, #161A20)" border="1px solid light-dark(#E2E5EA, #262B33)" border-radius=12 padding=16 gap=12 min-width=0
+style Secondary
+  color="light-dark(#5B6472, #9AA3AE)" font-size=13
+style Monospace
+  font-family="monospace" font-size=12 white-space="pre-wrap" overflow-wrap="anywhere"
+
+component Workbench
+  props
+    kind: string
+    live: bool
+    initialTab: string
+  resource viewport = exactViewport() as shape WindowSize
+  state revision = 0
+  state detailRevision = 0
+  state jobRevision = 0
+  state ticks = 0
+  state query = ""
+  state selectedId = kind == "host" ? "local" : ""
+  state selectedName = kind == "host" ? "Local Docker Engine" : ""
+  state selectedIds: string[] = []
+  state tab = initialTab
+  state reveal = false
+  state operation = ""
+  state operationLabel = ""
+  state argv = "[\"/bin/sh\"]"
+  state showAllActions = false
+  resource inventory = inventory(kind, revision) as shape Inventory else empty()
+  derive activeTab = tab != "" ? tab : match first(inventory.views) { case some(v) => v.id, case none => "inspect" }
+  resource detail = detail(kind, selectedId, activeTab, reveal, detailRevision) when selectedId != "" as shape Detail else empty()
+  mutation previewed as shape Preview then presentPreview
+  mutation executed as shape Execution refreshes inventory, detail
+  derive confirmation = match previewed { case some(p) => p.confirmation, case none => "" }
+  derive summary = match previewed { case some(p) => p.summary, case none => "" }
+  derive targets = match previewed { case some(p) => p.targets, case none => [] }
+  derive previewError = match previewed { case some(p) => p.error, case none => "" }
+  derive actionError = match executed { case some(r) => r.error, case none => "" }
+  derive actionText = match executed { case some(r) => r.text, case none => "" }
+  derive jobId = match executed { case some(r) => r.jobId, case none => "" }
+  resource job = job(jobId, jobRevision) when jobId != "" as shape Job else empty()
+  derive visible = inventory.items.filter(item => query.trim() == "" or item.name.toLowerCase().includes(query.trim().toLowerCase()) or item.id.toLowerCase().includes(query.trim().toLowerCase()) or item.project.toLowerCase().includes(query.trim().toLowerCase()))
+  derive busy = pending(previewed) or pending(executed) or (jobId != "" and job.status != "succeeded" and job.status != "failed")
+  derive wide = viewport.width >= 1100
+  derive currentDetail = detail.owner == `${kind}/${selectedId}/${activeTab}/${reveal}`
+  derive shownActions = showAllActions ? inventory.actions : inventory.actions.filter(a => not a.destructive)
+  task refresh mount
+    every(2000, tick)
+  action tick
+    let next = ticks + 1
+    let watchingJob = jobId != "" and job.status != "succeeded" and job.status != "failed"
+    ticks = next >= 4 ? 0 : next
+    if (live and next >= 4) or watchingJob
+      revision = revision + 1
+    if live and selectedId != "" and (activeTab == "logs" or activeTab == "stats" or activeTab == "top" or activeTab == "events") and not pending(detail)
+      detailRevision = detailRevision + 1
+    if watchingJob
+      jobRevision = jobRevision + 1
+  action refreshNow
+    revision = revision + 1
+    detailRevision = detailRevision + 1
+  action search(value: string)
+    query = value
+  action choose(id: string, name: string)
+    selectedId = id
+    selectedName = name
+    reveal = false
+  action check(id: string, on: bool)
+    selectedIds = on ? selectedIds.concat([id]) : selectedIds.filter(value => value != id)
+  action selectVisible
+    selectedIds = visible.map(item => item.id)
+  action clear
+    selectedIds = []
+  action chooseTab(id: string)
+    tab = id
+    reveal = false
+  action toggleReveal
+    reveal = not reveal
+  action editArguments(value: string)
+    argv = value
+  action toggleActions
+    showAllActions = not showAllActions
+  action prepare(id: string, label: string, input: string)
+    operation = id
+    operationLabel = label
+    if input != ""
+      showModal("arguments")
+    else
+      send previewed = previewAction(kind, selectedIds.length > 0 ? selectedIds : selectedId != "" ? [selectedId] : [], id, "[]")
+  action previewArguments
+    close("arguments")
+    send previewed = previewAction(kind, selectedIds.length > 0 ? selectedIds : selectedId != "" ? [selectedId] : [], operation, argv)
+  action presentPreview
+    if confirmation != ""
+      showModal("workbench-confirm")
+  action execute
+    send executed = executeAction(confirmation)
+    close("workbench-confirm")
+    selectedIds = []
+  action cancelPreview
+    close("workbench-confirm")
+  action cancelArguments
+    close("arguments")
+
+  view
+    column gap=16 min-width=0 testId=`workbench-${kind}`
+      row gap=12 align-items="center" flex-wrap="wrap"
+        input value=query input=search placeholder="Filter by name, ID or project" aria-label="Filter inventory" flex="1 1 240px" min-width=0 testId="inventory-search"
+        text `${visible.length} of ${inventory.items.length}` class=Secondary testId="inventory-count"
+        button press=selectVisible disabled=(visible.length == 0) testId="inventory-select-all"
+          text "Select all visible"
+        button press=refreshNow disabled=pending(inventory) testId="inventory-refresh"
+          text "Refresh"
+      if failed(inventory)
+        text "Inventory response could not be read. Refresh to retry." color="light-dark(#8A4500, #F0A35E)" testId="inventory-runtime-error"
+      if inventory.error != ""
+        text inventory.error class=Panel color="light-dark(#8A4500, #F0A35E)" testId="inventory-error"
+      if pending(inventory) and inventory.items.length == 0
+        text "Loading inventory…" class=Secondary testId="inventory-loading"
+      if previewError != ""
+        text previewError color="light-dark(#8A4500, #F0A35E)" testId="preview-error"
+      if actionError != ""
+        text actionError color="light-dark(#8A4500, #F0A35E)" testId="action-error"
+      if selectedIds.length > 0
+        row class=Panel gap=8 align-items="center"
+          text `${selectedIds.length} selected for bulk actions` flex=1 testId="inventory-selection"
+          button press=clear testId="inventory-clear"
+            text "Clear"
+      row display="grid" grid-template-columns=(wide ? "minmax(220px, 1fr) minmax(0, 2fr)" : "minmax(0, 1fr)") gap=16 align-items="start" testId="workbench-grid"
+        column class=Panel testId="inventory-panel"
+          text (kind == "projects" ? "Compose projects" : kind == "services" ? "Compose services" : kind == "commands" ? "Custom commands" : kind == "host" ? "Docker Engine" : "Inventory") role="heading" aria-level=2 font-size=18 font-weight=600
+          scroll height=(wide ? 470 : 250) min-width=0 testId="inventory-list"
+            column gap=4
+              for item in visible key=item.id
+                row gap=8 align-items="center" padding=4 min-width=0
+                  input type="checkbox" checked=selectedIds.includes(item.id) change=check(item.id) aria-label=`Select ${item.name}` testId=`item-select-${item.id}`
+                  button press=choose(item.id, item.name) flex=1 min-width=0 text-align="start" padding=8 aria-pressed=(selectedId == item.id) testId=`item-${item.id}`
+                    column gap=4 min-width=0
+                      text item.name font-weight=600 overflow-wrap="anywhere"
+                      text item.state class=Secondary
+                      if item.detail != ""
+                        text item.detail class=Secondary overflow-wrap="anywhere"
+              if visible.length == 0 and not pending(inventory) and inventory.error == "" and not failed(inventory)
+                text "No matching resources." class=Secondary testId="inventory-empty"
+          if kind == "projects" or kind == "services"
+            text "Compose projects use paths configured in Settings." class=Secondary
+        column class=Panel min-width=0 testId="detail-panel"
+          row gap=8 align-items="center" flex-wrap="wrap"
+            text (selectedName != "" ? selectedName : "Select a resource") font-size=18 font-weight=600 flex=1 min-width=0 overflow-wrap="anywhere" testId="detail-title"
+            if selectedId != ""
+              button press=refreshNow disabled=pending(detail) testId="detail-refresh"
+                text "Refresh detail"
+          if selectedId != ""
+            row gap=6 flex-wrap="wrap" role="tablist" aria-label="Resource details"
+              for view in inventory.views key=view.id
+                button press=chooseTab(view.id) aria-pressed=(activeTab == view.id) testId=`view-${view.id}`
+                  text view.label
+            if activeTab == "env" or activeTab == "inspect" or activeTab == "config"
+              button press=toggleReveal testId="detail-reveal" aria-pressed=reveal
+                text (reveal ? "Mask sensitive values" : "Reveal sensitive values")
+            if failed(detail)
+              text "Detail response could not be read. Refresh to retry." color="light-dark(#8A4500, #F0A35E)" testId="detail-runtime-error"
+            if pending(detail) and not currentDetail
+              text "Loading detail…" class=Secondary
+            else if currentDetail
+              if detail.error != ""
+                text detail.error color="light-dark(#8A4500, #F0A35E)" testId="detail-error"
+              if detail.metrics.length > 0
+                row gap=12 flex-wrap="wrap" testId="metrics-grid"
+                  for metric in detail.metrics key=metric.label
+                    column flex="1 1 170px" min-width=0 gap=8 padding=12 background-color="light-dark(#F5F6F8, #101318)" border-radius=8
+                      text metric.label class=Secondary
+                      text metric.value font-size=24 font-weight=600 testId=`metric-value-${metric.label}`
+                      row height=72 gap=3 align-items="end" aria-label=`${metric.label} recent samples` testId=`metric-chart-${metric.label}`
+                        for sample, index in metric.history key=index
+                          column flex=1 height=`${sample < 1 ? 1 : sample}%` background-color="light-dark(#1F5FD6, #7DB4FF)" border-radius=2
+                      text "Recent samples · normalized scale" class=Secondary
+              scroll height=(wide ? 350 : 280) min-width=0 background-color="light-dark(#F5F6F8, #101318)" padding=12 border-radius=8 testId="detail-scroll"
+                text detail.text class=Monospace testId="detail-text"
+          else
+            text "Choose a row to inspect logs, statistics and configuration. Select checkboxes for bulk operations." class=Secondary
+          if inventory.actions.length > 0
+            row align-items="center" gap=8 flex-wrap="wrap"
+              text "Actions" role="heading" aria-level=3 font-weight=600 flex=1
+              button press=toggleActions aria-pressed=showAllActions testId="show-destructive"
+                text (showAllActions ? "Hide destructive actions" : "Show destructive actions")
+            row gap=8 flex-wrap="wrap" testId="resource-actions"
+              for action in shownActions key=action.id
+                button press=prepare(action.id, action.label, action.input) disabled=busy destructive=action.destructive testId=`action-${action.id}`
+                  text action.label
+            text "Every action shows its exact targets before execution. Interactive sessions open your native terminal." class=Secondary
+      if actionText != "" or jobId != ""
+        column class=Panel testId="action-output"
+          text (jobId != "" ? `Operation · ${job.status}` : "Operation result") role="heading" aria-level=2 font-weight=600
+          if job.error != ""
+            text job.error color="light-dark(#8A4500, #F0A35E)"
+          scroll height=180 min-width=0
+            text (jobId != "" ? job.text : actionText) class=Monospace testId="operation-output"
+      dialog id="workbench-confirm" role="dialog" aria-label="Confirm operation"
+        column class=Panel width=(viewport.width < 600 ? viewport.width - 64 : 520) height=(viewport.height < 600 ? viewport.height - 96 : 440) gap=12 testId="resource-modal"
+          text "Review operation" role="heading" aria-level=2 font-weight=600
+          scroll flex=1 min-height=0 min-width=0 testId="confirmation-targets"
+            column gap=12 min-width=0
+              text operationLabel font-weight=600 overflow-wrap="anywhere"
+              text summary overflow-wrap="anywhere"
+              text `${targets.length} exact targets` class=Secondary testId="confirmation-count"
+              for target in targets key=target.id
+                column gap=3 min-width=0
+                  text target.name font-weight=600 overflow-wrap="anywhere"
+                  text target.id class=Monospace
+              text "Destructive actions can permanently delete data. Stopping services interrupts their users." class=Secondary
+          row gap=8 flex-wrap="wrap" flex-shrink=0 testId="resource-modal-actions"
+            button press=execute disabled=busy testId="resource-confirm"
+              text "Execute operation"
+            button press=cancelPreview testId="resource-cancel"
+              text "Cancel"
+      dialog id="arguments" aria-label="Command arguments"
+        column class=Panel width=(viewport.width < 600 ? viewport.width - 64 : 520) height=(viewport.height < 600 ? viewport.height - 96 : 360) testId="arguments-modal"
+          text "Command arguments" role="heading" aria-level=2
+          scroll flex=1 min-height=0 min-width=0
+            column gap=12 min-width=0
+              text operationLabel overflow-wrap="anywhere"
+              text "Enter a JSON array of executable and arguments. No shell interpolation is applied." class=Secondary
+              textarea value=argv input=editArguments rows=4 min-width=0 aria-label="Arguments as JSON" testId="action-arguments"
+          row gap=8 flex-wrap="wrap" flex-shrink=0
+            button press=previewArguments testId="arguments-preview"
+              text "Review targets"
+            button press=cancelArguments testId="arguments-cancel"
+              text "Cancel"
+
+component Settings
+  resource viewport = exactViewport() as shape WindowSize
+  state editing = false
+  state draft = ""
+  resource config = loadConfig() as shape Configuration else empty()
+  mutation saved as shape Saved refreshes config then savedConfig
+  derive saveError = match saved { case some(s) => s.error, case none => "" }
+  derive success = match saved { case some(s) => s.ok, case none => false }
+  action begin
+    draft = config.text
+    editing = true
+  action edit(value: string)
+    draft = value
+  action askSave
+    showModal("save-config")
+  action save
+    send saved = saveConfig(draft)
+    close("save-config")
+  action cancelSave
+    close("save-config")
+  action cancelEdit
+    editing = false
+  action savedConfig
+    if success
+      editing = false
+  action reloadConfig
+    refresh config
+  view
+    column class=Panel min-width=0 testId="settings-panel"
+      text "Local Docker & custom commands" role="heading" aria-level=2 font-size=20 font-weight=600
+      text "Docker socket access grants root-equivalent control. Custom commands execute with your user account's permissions." class=Secondary
+      text "Configure Compose projects and explicit executable argument arrays. Review paths and commands before saving." class=Secondary
+      text config.path class=Monospace testId="config-path"
+      if failed(config)
+        text "Configuration response could not be read. Reload to retry." color="light-dark(#8A4500, #F0A35E)" testId="config-runtime-error"
+      if config.error != ""
+        text config.error color="light-dark(#8A4500, #F0A35E)" testId="config-error"
+      if saveError != ""
+        text saveError color="light-dark(#8A4500, #F0A35E)" testId="config-save-error"
+      if success and not editing
+        text "Configuration saved." testId="config-saved"
+      if editing
+        textarea value=draft input=edit rows=18 aria-label="Configuration JSON" font-family="monospace" testId="config-editor"
+        row gap=8
+          button press=askSave disabled=pending(saved) testId="config-save"
+            text "Review and save"
+          button press=cancelEdit testId="config-cancel"
+            text "Cancel"
+      else
+        scroll height=350 min-width=0
+          text config.text class=Monospace testId="config-text"
+        row gap=8
+          button press=begin disabled=(config.error != "" or pending(config)) testId="config-edit"
+            text "Edit configuration"
+          button press=reloadConfig testId="config-refresh"
+            text "Reload"
+      dialog id="save-config" role="dialog" aria-label="Save configuration"
+        column class=Panel width=(viewport.width < 600 ? viewport.width - 64 : 520) height=180 testId="config-modal"
+          scroll flex=1 min-height=0 min-width=0
+            text "Save this local configuration? Custom command definitions will become executable from the app." overflow-wrap="anywhere"
+          row gap=8 flex-wrap="wrap" flex-shrink=0
+            button press=save testId="config-confirm"
+              text "Save configuration"
+            button press=cancelSave testId="config-dismiss"
+              text "Cancel"

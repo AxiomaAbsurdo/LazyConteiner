@@ -1,4 +1,34 @@
-# LazyConteiner first iteration
+# Full Lazydocker frontend implementation
+
+## Current scope
+
+Fix physical mouse clicks, expose the pinned Lazydocker feature inventory through Exact, and validate responsive layout and performance. Semantic driver taps do not prove native input delivery.
+
+## Public interfaces under test
+
+1. Loopback API: Lazydocker adapters against fake Docker responses and isolated command runners; denied requests and destructive-action confirmation.
+2. TypeScript adapter: typed responses, cached filtering/selection, errors, and operation transitions.
+3. Native window: physical pointer events, keyboard input, dialogs, scrolling, and resizing.
+4. End-to-end demo: identical frontend/API with isolated fixtures; no real workload mutations.
+5. Human validation: explicit pending/pass/fail status recorded from user observations.
+
+## Verification status
+
+Implemented the source-backed 57-action / 21-tab inventory. Final automated results: 153 Go race cases, 16 adapter tests, 16 authenticated native tests, and 36 live disposable Docker checks pass. Physical X11 input regression passes when run alone. User confirmed clicks and layout work on 2026-11-22. Individual Docker operations and terminal interaction remain pending; docs/FEATURES.md records the precise evidence.
+
+## Completed implementation steps
+
+- Diagnose pointer delivery; add a reproducible regression and tracked runtime patch if required.
+- Inventory upstream menus, detail views, commands, Compose behavior, and settings before claiming parity.
+- Implement inventory features with exact-target confirmations for destructive operations.
+- Use supported Exact layout primitives. Check widths 640/768/1024/1440, short heights, and resize transitions.
+- Remove network requests from local filtering/selection; load expensive details on demand and bound output.
+- Measure API latency, payload, startup, and resource use with limitations recorded.
+- Run automated and physical-input acceptance. Human validation remains pending until the user reports results.
+
+Evidence lives in `docs/FEATURES.md` and `docs/PERFORMANCE.md`. A button or route alone is not feature validation.
+
+## Previous iteration
 
 ## Background
 

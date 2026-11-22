@@ -9,7 +9,7 @@ test "dashboard navigation and pause"
   expect tree has "group-overview"
   tap "nav-images"
   expect text "breadcrumb" == "/ Images"
-  expect tree has "placeholder"
+  expect tree has "workbench-images"
   tap "nav-dashboard"
   tap "live-toggle"
   expect text "live-toggle" == "Paused"
@@ -27,7 +27,8 @@ test "filter, selection and confirmation cancellation"
   clock data
   expect tree has "bulk-bar"
   tap "bulk-start"
-  expect text "operation-target" == "start 1 selected containers?"
+  clock data
+  expect text "operation-target" == "start 1 selected containers: kodus_api?"
   tap "operation-cancel"
   tap "filter-running"
   clock data
@@ -55,8 +56,224 @@ test "alerts and safe cleanup preview"
 test "confirmation releases the dashboard"
   clock data
   tap "row-demo-api-action"
+  clock data
   tap "operation-confirm"
   clock data
   tap "filter-running"
   clock data
   expect state filter == "running"
+
+test "container details and executable capability confirmation"
+  clock data
+  tap "nav-containers"
+  clock data
+  expect tree missing "inventory-error"
+  tap "item-demo-api"
+  clock data
+  expect text "detail-title" == "kodus_api"
+  expect tree has "detail-text"
+  tap "view-stats"
+  clock data
+  expect tree has "metrics-grid"
+  expect tree missing "detail-error"
+  tap "view-inspect"
+  clock data
+  tap "detail-reveal"
+  clock data
+  expect tree missing "detail-error"
+  tap "action-stop"
+  clock data
+  expect tree has "confirmation-targets"
+  tap "resource-cancel"
+  tap "action-start"
+  clock data
+  tap "resource-confirm"
+  clock data
+  expect tree has "action-output"
+  expect tree missing "action-error"
+  tap "show-destructive"
+  expect tree has "action-remove-force-volumes"
+  type "inventory-search" "openhands"
+  expect text "inventory-count" == "1 of 6"
+
+test "Compose, images, volumes, networks and host details"
+  clock data
+  tap "nav-stacks"
+  clock data
+  tap "item-kodus"
+  clock data
+  tap "view-config"
+  clock data
+  expect tree has "detail-reveal"
+  tap "detail-reveal"
+  clock data
+  expect tree has "detail-text"
+  expect tree missing "detail-error"
+  expect tree has "action-up"
+  tap "nav-services"
+  clock data
+  tap "item-kodus/api"
+  clock data
+  expect tree has "action-exec"
+  tap "nav-images"
+  clock data
+  tap "item-sha256:demo-image"
+  tap "view-history"
+  clock data
+  expect tree has "detail-text"
+  expect tree missing "detail-error"
+  tap "nav-volumes"
+  clock data
+  tap "item-demo-data"
+  clock data
+  expect tree missing "detail-error"
+  tap "nav-networks"
+  clock data
+  tap "item-demo-network"
+  clock data
+  expect tree missing "detail-error"
+  tap "nav-host"
+  clock data
+  expect tree has "detail-text"
+  expect tree missing "detail-error"
+  tap "nav-events"
+  clock data
+  expect tree has "view-events"
+  expect tree missing "detail-error"
+
+test "destructive preview identifies targets and cancels without removing"
+  clock data
+  tap "nav-volumes"
+  clock data
+  tap "item-demo-data"
+  tap "show-destructive"
+  tap "action-remove"
+  clock data
+  expect tree has "confirmation-targets"
+  tap "resource-cancel"
+  tap "inventory-refresh"
+  clock data
+  expect tree has "item-demo-data"
+
+test "responsive workspace 640 by 768"
+  size 640x768
+  clock data
+  expect layout "sidebar" width == 72
+  tap "nav-containers"
+  clock data
+  tap "item-demo-api"
+  clock data
+  expect layout "detail-panel" width <= 544
+
+test "responsive workspace 768 by 768"
+  size 768x768
+  clock data
+  expect layout "sidebar" width == 72
+  tap "nav-containers"
+  clock data
+  tap "item-demo-api"
+  clock data
+  expect layout "detail-panel" width <= 648
+
+test "responsive workspace 1024 by 768"
+  size 1024x768
+  clock data
+  expect layout "sidebar" width == 72
+  tap "nav-containers"
+  clock data
+  tap "item-demo-api"
+  clock data
+  expect layout "detail-panel" width <= 904
+
+test "responsive workspace 1440 by 900"
+  size 1440x900
+  clock data
+  expect layout "sidebar" width == 248
+  tap "nav-containers"
+  clock data
+  tap "item-demo-api"
+  clock data
+  expect layout "detail-panel" width <= 800
+
+test "configuration and custom command execution"
+  clock data
+  tap "nav-settings"
+  clock data
+  tap "config-edit"
+  type "config-editor" "{\"projects\": [], \"commands\": [{\"id\": \"hello\", \"label\": \"Hello fixture\", \"scope\": \"commands\", \"argv\": [\"printf\", \"hello\"], \"cwd\": \"\", \"terminal\": false}], \"terminal\": [\"x-terminal-emulator\", \"-e\"], \"stats\": []}"
+  tap "config-save"
+  tap "config-confirm"
+  clock data
+  expect tree has "config-saved"
+  expect tree missing "config-save-error"
+  tap "nav-commands"
+  clock data
+  tap "item-hello"
+  tap "action-run"
+  clock data
+  tap "resource-confirm"
+  clock data
+  clock +2200 real
+  expect tree has "action-output"
+  expect tree missing "action-error"
+
+test "dashboard fits a 320 pixel window"
+  size 320x640
+  clock data
+  expect layout "app" width == 320
+  expect layout "sidebar" width == 72
+  expect layout "stacks-panel" width <= 224
+  tap "nav-containers"
+  clock data
+  expect layout "inventory-panel" width <= 224
+  expect layout "detail-panel" width <= 224
+
+test "confirmation fits a 360 pixel window"
+  size 360x640
+  clock data
+  tap "nav-containers"
+  clock data
+  tap "item-demo-api"
+  tap "action-start"
+  clock data
+  expect layout "resource-modal" width <= 344
+  expect layout "resource-modal" height <= 608
+  tap "resource-cancel"
+  type "inventory-search" "openhands"
+  expect text "inventory-count" == "1 of 6"
+
+test "short window keeps confirmation actions reachable"
+  size 600x480
+  clock data
+  tap "nav-containers"
+  clock data
+  tap "item-demo-api"
+  tap "action-start"
+  clock data
+  expect layout "resource-modal" width <= 568
+  expect layout "resource-modal" height <= 448
+  expect layout "resource-modal-actions" height >= 36
+  tap "resource-cancel"
+  tap "nav-dashboard"
+  tap "row-demo-api-action"
+  clock data
+  expect layout "quick-modal" width <= 568
+  expect layout "quick-modal" height <= 448
+  tap "operation-cancel"
+
+test "select all visible supports verified bulk operations"
+  size 640x768
+  clock data
+  tap "nav-containers"
+  clock data
+  tap "inventory-select-all"
+  expect text "inventory-selection" == "6 selected for bulk actions"
+  tap "action-stop"
+  clock data
+  expect text "confirmation-count" == "6 exact targets"
+  tap "resource-cancel"
+  type "inventory-search" "openhands"
+  tap "inventory-select-all"
+  expect text "inventory-selection" == "1 selected for bulk actions"
+  tap "inventory-clear"
+  expect tree missing "inventory-selection"

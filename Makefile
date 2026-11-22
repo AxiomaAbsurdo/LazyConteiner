@@ -1,4 +1,4 @@
-.PHONY: setup run demo test build check
+.PHONY: setup run demo test build check benchmark test-live test-input
 
 setup:
 	./scripts/exact-setup.sh
@@ -16,8 +16,17 @@ build:
 
 test:
 	cd backend && go test ./...
-	cd fleet && bun test app.test.ts
+	cd fleet && bun test
 	python3 scripts/dev.py --test
 
 check:
 	./scripts/exact-run.sh check
+
+benchmark:
+	python3 scripts/benchmark.py
+
+test-live:
+	python3 scripts/live_check.py
+
+test-input: build
+	python3 scripts/native-input-test.py

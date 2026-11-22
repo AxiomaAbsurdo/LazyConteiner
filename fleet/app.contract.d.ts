@@ -5,10 +5,19 @@
 // function per source, given its arguments as an array (then store, storage, native) and
 // answering its shape, or a Promise of it.
 //   clearSelected: (args: []) => Reply
-//   containerOp: (args: [string, string]) => Reply
-//   dashboard: (args: [string, string, boolean]) => Dashboard
+//   dashboard: (args: [string, string, boolean, number]) => Dashboard
+//   detail: (args: [string, string, string, boolean, number]) => Detail
 //   dismissAlert: (args: [string]) => Reply
+//   executeAction: (args: [string]) => Execution
+//   executeQuick: (args: [string]) => QuickExecution
+//   inventory: (args: [string, number]) => Inventory
+//   job: (args: [string, number]) => Job
+//   loadConfig: (args: []) => Configuration
+//   prepareContainer: (args: [string, string]) => QuickPreview
+//   previewAction: (args: [string, string[], string, string]) => Preview
 //   previewCleanup: (args: []) => Reply
+//   quickJob: (args: [string, number]) => QuickJob
+//   saveConfig: (args: [string]) => Saved
 //   setCleanup: (args: [string, boolean]) => Reply
 //   setSelected: (args: [string, boolean]) => Reply
 // The shapes. None is exported: name one by its source, `type Reply = Result<'clearSelected'>`.
@@ -22,8 +31,23 @@
 //   Event = { id: string; name: string; what: string; tone: string; at: string }
 //   CleanupItem = { id: string; label: string; size: string; checked: boolean; dangerous: boolean }
 //   Environment = { id: string; label: string; connected: boolean; detail: string }
-//   Dashboard = { warnings: string[]; mode: string; error: string; updatedAt: string; env: Environment; envs: Environment[]; totals: Totals; alerts: Alert[]; stacks: Stack[]; selectedCount: number; host: Meter[]; serviceActive: boolean; consumers: Consumer[]; events: Event[]; cleanup: CleanupItem[]; unread: number; attention: number }
+//   Dashboard = { selectedNames: string; warnings: string[]; mode: string; error: string; updatedAt: string; env: Environment; envs: Environment[]; totals: Totals; alerts: Alert[]; stacks: Stack[]; selectedCount: number; host: Meter[]; serviceActive: boolean; consumers: Consumer[]; events: Event[]; cleanup: CleanupItem[]; unread: number; attention: number }
 //   Reply = { ok: boolean; error: string }
+//   QuickPreview = { confirmation: string; names: string; error: string }
+//   QuickExecution = { text: string; jobId: string; error: string }
+//   QuickJob = { status: string; text: string; error: string }
+//   InventoryItem = { id: string; name: string; state: string; detail: string; project: string; service: string }
+//   Capability = { id: string; label: string; destructive: boolean; input: string }
+//   DetailView = { id: string; label: string }
+//   Inventory = { kind: string; items: InventoryItem[]; actions: Capability[]; views: DetailView[]; mode: string; error: string }
+//   Metric = { label: string; value: string; percent: number; history: number[] }
+//   Detail = { metrics: Metric[]; title: string; text: string; mode: string; owner: string; error: string }
+//   Target = { id: string; name: string }
+//   Preview = { confirmation: string; summary: string; targets: Target[]; expiresAt: string; error: string }
+//   Execution = { count: number; mode: string; text: string; jobId: string; error: string }
+//   Job = { id: string; status: string; text: string; error: string }
+//   Configuration = { text: string; path: string; error: string }
+//   Saved = { ok: boolean; error: string }
 
 /** Storage capabilities supplied by the host. Import these types; there are
  * no ambient fs/sqlite globals and importing a type conveys no authority. */
@@ -264,45 +288,82 @@ export interface Statement {
   close(): Promise<void>;
 }
 
-type T0 = string;
-type T1 = number;
-type T2 = boolean;
-type T3 = { "id": T0; "name": T0; "stack": T0; "state": T0; "exitCode": T1; "ports": T0; "cpu": T0; "selected": T2; };
-type T4 = T3[];
-type T5 = { "id": T0; "name": T0; "isCompose": T2; "running": T1; "total": T1; "status": T0; "containers": T4; };
-type T6 = { "id": T0; "name": T0; "exitCode": T1; };
-type T7 = T6[];
-type T8 = { "id": T0; "title": T0; "hint": T0; "cta": T0; "ctaAction": T0; "tone": T0; "items": T7; };
-type T9 = { "containers": T1; "running": T1; "failed": T1; "cleanExit": T1; "images": T1; "imagesSize": T0; "imagesUnused": T1; "volumes": T1; "volumesUnused": T1; "networks": T1; "networksDetail": T0; };
-type T10 = { "label": T0; "valueText": T0; "percent": T1; "warn": T2; };
-type T11 = { "id": T0; "name": T0; "cpu": T0; };
-type T12 = { "id": T0; "name": T0; "what": T0; "tone": T0; "at": T0; };
-type T13 = { "id": T0; "label": T0; "size": T0; "checked": T2; "dangerous": T2; };
-type T14 = { "id": T0; "label": T0; "connected": T2; "detail": T0; };
-type T15 = T0[];
-type T16 = T14[];
-type T17 = T8[];
-type T18 = T5[];
-type T19 = T10[];
+type T0 = number;
+type T1 = { "width": T0; "height": T0; };
+type T2 = string;
+type T3 = boolean;
+type T4 = { "id": T2; "name": T2; "stack": T2; "state": T2; "exitCode": T0; "ports": T2; "cpu": T2; "selected": T3; };
+type T5 = T4[];
+type T6 = { "id": T2; "name": T2; "isCompose": T3; "running": T0; "total": T0; "status": T2; "containers": T5; };
+type T7 = { "id": T2; "name": T2; "exitCode": T0; };
+type T8 = T7[];
+type T9 = { "id": T2; "title": T2; "hint": T2; "cta": T2; "ctaAction": T2; "tone": T2; "items": T8; };
+type T10 = { "containers": T0; "running": T0; "failed": T0; "cleanExit": T0; "images": T0; "imagesSize": T2; "imagesUnused": T0; "volumes": T0; "volumesUnused": T0; "networks": T0; "networksDetail": T2; };
+type T11 = { "label": T2; "valueText": T2; "percent": T0; "warn": T3; };
+type T12 = { "id": T2; "name": T2; "cpu": T2; };
+type T13 = { "id": T2; "name": T2; "what": T2; "tone": T2; "at": T2; };
+type T14 = { "id": T2; "label": T2; "size": T2; "checked": T3; "dangerous": T3; };
+type T15 = { "id": T2; "label": T2; "connected": T3; "detail": T2; };
+type T16 = T2[];
+type T17 = T15[];
+type T18 = T9[];
+type T19 = T6[];
 type T20 = T11[];
 type T21 = T12[];
 type T22 = T13[];
-type T23 = { "warnings": T15; "mode": T0; "error": T0; "updatedAt": T0; "env": T14; "envs": T16; "totals": T9; "alerts": T17; "stacks": T18; "selectedCount": T1; "host": T19; "serviceActive": T2; "consumers": T20; "events": T21; "cleanup": T22; "unread": T1; "attention": T1; };
-type T24 = { "count": T1; };
-type T25 = { "ok": T2; "error": T0; };
-type T26 = T25 | null;
+type T23 = T14[];
+type T24 = { "selectedNames": T2; "warnings": T16; "mode": T2; "error": T2; "updatedAt": T2; "env": T15; "envs": T17; "totals": T10; "alerts": T18; "stacks": T19; "selectedCount": T0; "host": T20; "serviceActive": T3; "consumers": T21; "events": T22; "cleanup": T23; "unread": T0; "attention": T0; };
+type T25 = { "count": T0; };
+type T26 = { "ok": T3; "error": T2; };
+type T27 = { "confirmation": T2; "names": T2; "error": T2; };
+type T28 = { "text": T2; "jobId": T2; "error": T2; };
+type T29 = { "status": T2; "text": T2; "error": T2; };
+type T30 = { "width": T0; "height": T0; };
+type T31 = { "id": T2; "name": T2; "state": T2; "detail": T2; "project": T2; "service": T2; };
+type T32 = { "id": T2; "label": T2; "destructive": T3; "input": T2; };
+type T33 = { "id": T2; "label": T2; };
+type T34 = T31[];
+type T35 = T32[];
+type T36 = T33[];
+type T37 = { "kind": T2; "items": T34; "actions": T35; "views": T36; "mode": T2; "error": T2; };
+type T38 = T0[];
+type T39 = { "label": T2; "value": T2; "percent": T0; "history": T38; };
+type T40 = T39[];
+type T41 = { "metrics": T40; "title": T2; "text": T2; "mode": T2; "owner": T2; "error": T2; };
+type T42 = { "id": T2; "name": T2; };
+type T43 = T42[];
+type T44 = { "confirmation": T2; "summary": T2; "targets": T43; "expiresAt": T2; "error": T2; };
+type T45 = { "count": T0; "mode": T2; "text": T2; "jobId": T2; "error": T2; };
+type T46 = { "id": T2; "status": T2; "text": T2; "error": T2; };
+type T47 = { "text": T2; "path": T2; "error": T2; };
+type T48 = { "ok": T3; "error": T2; };
+type T49 = T26 | null;
+type T50 = T27 | null;
+type T51 = T28 | null;
+type T52 = T48 | null;
+type T53 = T44 | null;
+type T54 = T45 | null;
 
 /** Sources called by compiled mutation sends. */
-export type MutationSource = "clearSelected" | "containerOp" | "dismissAlert" | "previewCleanup" | "setCleanup" | "setSelected";
+export type MutationSource = "clearSelected" | "dismissAlert" | "executeAction" | "executeQuick" | "prepareContainer" | "previewAction" | "previewCleanup" | "saveConfig" | "setCleanup" | "setSelected";
 
 export interface SourceMap {
-  "clearSelected": { args: []; result: T25 };
-  "containerOp": { args: [T0, T0]; result: T25 };
-  "dashboard": { args: [T0, T0, T2]; result: T23 };
-  "dismissAlert": { args: [T0]; result: T25 };
-  "previewCleanup": { args: []; result: T25 };
-  "setCleanup": { args: [T0, T2]; result: T25 };
-  "setSelected": { args: [T0, T2]; result: T25 };
+  "clearSelected": { args: []; result: T26 };
+  "dashboard": { args: [T2, T2, T3, T0]; result: T24 };
+  "detail": { args: [T2, T2, T2, T3, T0]; result: T41 };
+  "dismissAlert": { args: [T2]; result: T26 };
+  "executeAction": { args: [T2]; result: T45 };
+  "executeQuick": { args: [T2]; result: T28 };
+  "inventory": { args: [T2, T0]; result: T37 };
+  "job": { args: [T2, T0]; result: T46 };
+  "loadConfig": { args: []; result: T47 };
+  "prepareContainer": { args: [T2, T2]; result: T27 };
+  "previewAction": { args: [T2, T16, T2, T2]; result: T44 };
+  "previewCleanup": { args: []; result: T26 };
+  "quickJob": { args: [T2, T0]; result: T29 };
+  "saveConfig": { args: [T2]; result: T48 };
+  "setCleanup": { args: [T2, T3]; result: T26 };
+  "setSelected": { args: [T2, T3]; result: T26 };
 }
 
 export type Source = keyof SourceMap;

@@ -6,6 +6,7 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/docker/docker/client"
 	"github.com/jesseduffield/lazydocker/pkg/commands"
@@ -26,34 +27,16 @@ func call(b *backend, method, path, token, origin, host string) *httptest.Respon
 	return w
 }
 
-func TestActionBoundary(t *testing.T) {
-	b := &backend{demo: true, token: "test-secret", rows: demoRows()}
-	for _, tt := range []struct {
-		name, path, token, origin, host string
-		want                            int
-	}{
-		{"missing token", "/api/containers/demo-api/start", "", "", "", 401},
-		{"wrong token", "/api/containers/demo-api/start", "bad", "", "", 401},
-		{"cross site", "/api/containers/demo-api/start", "test-secret", "https://evil.example", "", 403},
-		{"null origin", "/api/containers/demo-api/start", "test-secret", "null", "", 403},
-		{"rebinding", "/api/containers/demo-api/start", "test-secret", "", "evil.example:17878", 403},
-		{"unsupported delete", "/api/containers/demo-api/remove", "test-secret", "", "", 400},
-		{"unknown container", "/api/containers/unknown/start", "test-secret", "", "", 404},
-		{"valid action", "/api/containers/demo-api/start", "test-secret", "", "", 200},
-	} {
-		t.Run(tt.name, func(t *testing.T) {
-			w := call(b, http.MethodPost, tt.path, tt.token, tt.origin, tt.host)
-			if w.Code != tt.want {
-				t.Fatalf("got %d: %s; want %d", w.Code, w.Body, tt.want)
-			}
-		})
+func TestLegacyMutationEndpointDisabled(t *testing.T) {
+	b := testBackend()
+	for _, op := range []string{"start", "stop", "restart", "remove"} {
+		w := call(b, http.MethodPost, "/api/containers/demo-api/"+op, "test-secret", "", "")
+		if w.Code != http.StatusGone {
+			t.Fatalf("legacy mutation enabled: %d", w.Code)
+		}
 	}
-	if b.rows[0].State != "running" {
-		t.Fatal("valid action did not update isolated demo inventory")
-	}
-	b.token = ""
-	if got := call(b, http.MethodPost, "/api/containers/demo-api/stop", "", "", "").Code; got != 401 {
-		t.Fatalf("empty configuration must disable actions: %d", got)
+	if b.rows[0].State != "exited" {
+		t.Fatal("legacy endpoint changed container")
 	}
 }
 
@@ -105,8 +88,8 @@ func TestDashboardAggregationAndDemoIsolation(t *testing.T) {
 	if result.Mode != "demo" || len(result.Stacks) != 3 || result.Totals["running"] != float64(2) || result.Totals["failed"] != float64(3) || result.Totals["cleanExit"] != float64(1) {
 		t.Fatalf("incorrect dashboard: %s", w.Body.String())
 	}
-	if result.Host == nil || len(result.Host) != 0 {
-		t.Fatal("uncollected metrics must be an empty array, never fabricated")
+	if len(result.Host) != 1 || result.Host[0]["label"] != "Memory (sample)" {
+		t.Fatal("demo metrics must be explicitly labelled samples")
 	}
 	// Paused and created containers are not clean exits or failed exits.
 	d := summarize([]containerRow{{ID: "x", State: "paused", ExitCode: 0}, {ID: "y", State: "created", ExitCode: 0}}, "live")
@@ -125,7 +108,7 @@ func TestLazydockerCoreAgainstDockerAPI(t *testing.T) {
 			if r.URL.Query().Get("all") != "1" {
 				t.Error("Lazydocker must include stopped containers")
 			}
-			_, _ = w.Write([]byte(`[{"Id":"abc123","Names":["/sample-api"],"State":"exited","Labels":{"com.docker.compose.project":"sample"},"Ports":[]}]`))
+			_, _ = w.Write([]byte(`[{"Id":"abc123","Names":["/sample-api"],"State":"exited","Status":"Exited (7) 1 minute ago","Labels":{"com.docker.compose.project":"sample"},"Ports":[]}]`))
 		case "/containers/abc123/json":
 			_, _ = w.Write([]byte(`{"Id":"abc123","Name":"/sample-api","State":{"Status":"exited","ExitCode":7}}`))
 		case "/containers/abc123/start":
@@ -159,16 +142,42 @@ func TestLazydockerCoreAgainstDockerAPI(t *testing.T) {
 	if w.Code != 200 || !strings.Contains(w.Body.String(), `"exitCode":7`) || !strings.Contains(w.Body.String(), `"name":"sample-api"`) {
 		t.Fatalf("Lazydocker inventory mapping failed: %d %s", w.Code, w.Body)
 	}
-	w = call(b, http.MethodPost, "/api/containers/abc123/start", "test-secret", "", "")
-	if w.Code != 200 || !started {
+	preview := apiCall(b, "POST", "/api/action/preview", actionRequest{Kind: "containers", IDs: []string{"abc123"}, Op: "start"})
+	var plan struct {
+		Confirmation string `json:"confirmation"`
+	}
+	_ = json.Unmarshal(preview.Body.Bytes(), &plan)
+	w = apiCall(b, "POST", "/api/action", object{"confirmation": plan.Confirmation})
+	if w.Code != http.StatusAccepted {
 		t.Fatalf("Lazydocker lifecycle request failed: %d %s", w.Code, w.Body)
 	}
+	var accepted struct {
+		JobID string `json:"jobId"`
+	}
+	_ = json.Unmarshal(w.Body.Bytes(), &accepted)
+	for end := time.Now().Add(time.Second); ; {
+		poll := apiCall(b, "GET", "/api/jobs/"+accepted.JobID, nil)
+		var j job
+		_ = json.Unmarshal(poll.Body.Bytes(), &j)
+		if j.Status == "succeeded" {
+			break
+		}
+		if j.Status == "failed" || time.Now().After(end) {
+			t.Fatalf("lifecycle job: %+v", j)
+		}
+		time.Sleep(time.Millisecond)
+	}
+	if !started {
+		t.Fatal("Lazydocker start was not executed")
+	}
 	usageUnavailable = true
+	b.invalidate()
 	w = call(b, http.MethodGet, "/api/dashboard", "", "", "")
 	if w.Code != 200 || !strings.Contains(w.Body.String(), `Docker disk usage unavailable`) || !strings.Contains(w.Body.String(), `"imagesSize":"Unavailable"`) {
 		t.Fatalf("partial inventory failure must retain unavailable state and warning: %d %s", w.Code, w.Body)
 	}
 	daemon.Close()
+	b.invalidate()
 	w = call(b, http.MethodGet, "/api/dashboard", "", "", "")
 	if w.Code != 503 || !strings.Contains(w.Body.String(), "Docker unavailable") {
 		t.Fatalf("unavailable Docker must not fall back to demo: %d %s", w.Code, w.Body)

@@ -2,8 +2,6 @@
 package main
 
 import (
-	"context"
-	"crypto/subtle"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -16,8 +14,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/docker/docker/api/types"
-	"github.com/docker/docker/api/types/network"
 	"github.com/docker/docker/client"
 	"github.com/jesseduffield/lazydocker/pkg/commands"
 	"github.com/sirupsen/logrus"
@@ -47,11 +43,24 @@ type stack struct {
 }
 
 type backend struct {
-	docker *commands.DockerCommand
-	demo   bool
-	token  string
-	mu     sync.Mutex
-	rows   []containerRow
+	docker          *commands.DockerCommand
+	demo            bool
+	token           string
+	mu              sync.Mutex
+	rows            []containerRow
+	cache           map[string]cachedValue
+	cacheGeneration uint64
+	plans           map[string]actionPlan
+	jobs            map[string]*job
+	config          appConfig
+	configPath      string
+	runner          commandRunner
+	demoRemoved     map[string]bool
+	statsHistory    map[string][]float64
+	statsTimes      map[string][]time.Time
+	liveConsumers   []object
+	liveCPU         map[string]string
+	liveEvents      []object
 }
 
 func main() {
@@ -63,6 +72,9 @@ func main() {
 		log.Fatal("--listen must use a loopback IP address")
 	}
 	b := &backend{demo: *demo, token: os.Getenv("LAZYCONTAINER_TOKEN"), rows: demoRows()}
+	if err := b.loadConfig(); err != nil {
+		log.Fatal(err)
+	}
 	if !*demo {
 		// Inject only the Docker client. NewDockerCommand also starts the TUI's
 		// config/Compose/SSH setup and can terminate the process on errors.
@@ -72,6 +84,7 @@ func main() {
 		}
 		defer cli.Close()
 		b.docker = &commands.DockerCommand{Client: cli, Log: logrus.NewEntry(logrus.New())}
+		go b.sampleLiveMetrics()
 	}
 	if b.token == "" {
 		log.Print("LAZYCONTAINER_TOKEN absent: lifecycle actions disabled")
@@ -87,7 +100,7 @@ func localDockerClient() (*client.Client, error) {
 	if host := os.Getenv("DOCKER_HOST"); host != "" && !strings.HasPrefix(host, "unix://") {
 		return nil, fmt.Errorf("this iteration requires a local Unix Docker socket; unset DOCKER_HOST or set it to unix:///path/to/docker.sock")
 	}
-	return client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation(), client.WithTimeout(10*time.Second))
+	return client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation(), client.WithTimeout(45*time.Second))
 }
 
 func (b *backend) handler() http.Handler {
@@ -103,7 +116,10 @@ func (b *backend) handler() http.Handler {
 		}
 		writeJSON(w, http.StatusOK, dash)
 	})
-	mux.HandleFunc("POST /api/containers/{id}/{op}", b.containerAction)
+	mux.HandleFunc("POST /api/containers/{id}/{op}", func(w http.ResponseWriter, r *http.Request) {
+		failure(w, http.StatusGone, fmt.Errorf("use /api/action/preview then /api/action; direct mutations are disabled"))
+	})
+	b.registerAPI(mux)
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Cache-Control", "no-store")
 		w.Header().Set("X-Content-Type-Options", "nosniff")
@@ -129,127 +145,6 @@ func writeJSON(w http.ResponseWriter, status int, data any) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 	_ = json.NewEncoder(w).Encode(data)
-}
-
-func (b *backend) containerAction(w http.ResponseWriter, r *http.Request) {
-	if b.token == "" || subtle.ConstantTimeCompare([]byte(r.Header.Get("X-LazyContainer-Token")), []byte(b.token)) != 1 {
-		writeJSON(w, http.StatusUnauthorized, object{"error": "lifecycle action requires session token"})
-		return
-	}
-	op := r.PathValue("op")
-	if op != "start" && op != "stop" && op != "restart" {
-		writeJSON(w, http.StatusBadRequest, object{"error": "supported actions: start, stop, restart"})
-		return
-	}
-	b.mu.Lock()
-	defer b.mu.Unlock()
-	id := r.PathValue("id")
-	if b.demo {
-		for i := range b.rows {
-			if b.rows[i].ID == id {
-				b.rows[i].State, b.rows[i].ExitCode = "running", -1
-				if op == "stop" {
-					b.rows[i].State, b.rows[i].ExitCode = "exited", 0
-				}
-				writeJSON(w, http.StatusOK, object{"count": 1, "mode": "demo"})
-				return
-			}
-		}
-	} else {
-		containers, err := b.docker.GetContainers(nil)
-		if err != nil {
-			writeJSON(w, http.StatusServiceUnavailable, object{"error": err.Error()})
-			return
-		}
-		for _, ctr := range containers {
-			// Resolve exact IDs from current inventory, never names or shell input.
-			if ctr.ID != id {
-				continue
-			}
-			switch op {
-			case "start":
-				err = ctr.Start()
-			case "stop":
-				err = ctr.Stop()
-			case "restart":
-				err = ctr.Restart()
-			}
-			if err != nil {
-				writeJSON(w, http.StatusBadGateway, object{"error": err.Error()})
-				return
-			}
-			writeJSON(w, http.StatusOK, object{"count": 1, "mode": "live"})
-			return
-		}
-	}
-	writeJSON(w, http.StatusNotFound, object{"error": "container no longer exists"})
-}
-
-func (b *backend) dashboard(ctx context.Context) (object, error) {
-	b.mu.Lock()
-	defer b.mu.Unlock()
-	rows := b.rows
-	if !b.demo {
-		containers, err := b.docker.GetContainers(nil)
-		if err != nil {
-			return nil, fmt.Errorf("Docker unavailable: %w", err)
-		}
-		rows = make([]containerRow, 0, len(containers))
-		for _, ctr := range containers {
-			exitCode := -1
-			if ctr.Details.ContainerJSONBase != nil && ctr.Details.State != nil && ctr.Container.State != "running" {
-				exitCode = ctr.Details.State.ExitCode
-			}
-			ports := []string{}
-			for _, port := range ctr.Container.Ports {
-				if port.PublicPort != 0 {
-					ports = append(ports, fmt.Sprintf("%s:%d → %d/%s", port.IP, port.PublicPort, port.PrivatePort, port.Type))
-				}
-			}
-			portText := strings.Join(ports, ", ")
-			if portText == "" {
-				portText = "—"
-			}
-			rows = append(rows, containerRow{ID: ctr.ID, Name: ctr.Name, Stack: ctr.ProjectName, State: ctr.Container.State, ExitCode: exitCode, Ports: portText, CPU: "—"})
-		}
-	}
-	dash := summarize(rows, b.mode())
-	if b.demo {
-		return dash, nil
-	}
-	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
-	defer cancel()
-	warnings := []string{"CPU, host metrics and events are not collected in this iteration."}
-	totals := dash["totals"].(object)
-	usage, err := b.docker.Client.DiskUsage(ctx, types.DiskUsageOptions{})
-	if err != nil {
-		warnings = append(warnings, "Docker disk usage unavailable: "+err.Error())
-	} else {
-		totals["images"], totals["volumes"] = len(usage.Images), len(usage.Volumes)
-		var size int64
-		unusedImages, unusedVolumes := 0, 0
-		for _, image := range usage.Images {
-			size += image.Size
-			if image.Containers == 0 {
-				unusedImages++
-			}
-		}
-		for _, volume := range usage.Volumes {
-			if volume.UsageData != nil && volume.UsageData.RefCount == 0 {
-				unusedVolumes++
-			}
-		}
-		totals["imagesSize"], totals["imagesUnused"], totals["volumesUnused"] = humanBytes(size), unusedImages, unusedVolumes
-	}
-	networks, err := b.docker.Client.NetworkList(ctx, network.ListOptions{})
-	if err != nil {
-		warnings = append(warnings, "Docker network inventory unavailable: "+err.Error())
-	} else {
-		totals["networks"] = len(networks)
-		totals["networksDetail"] = "Docker networks"
-	}
-	dash["warnings"] = warnings
-	return dash, nil
 }
 
 func summarize(rows []containerRow, mode string) object {

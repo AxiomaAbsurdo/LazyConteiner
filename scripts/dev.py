@@ -66,8 +66,10 @@ def main():
         if backend.poll() is not None:
             raise RuntimeError('Backend exited during startup.')
         print('LazyConteiner: ' + ('DEMO (no Docker access)' if args.demo else 'LIVE Docker') + ('. Running native UI tests.' if args.test else '. Close the window or press Ctrl+C to stop.'), flush=True)
-        ui = subprocess.Popen([str(ROOT / 'scripts/exact-run.sh'), 'test' if args.test else 'run'], cwd=ROOT,
-                              env={**os.environ, 'XDG_DATA_HOME': str(data_home), 'EXACT_SKIP_BUILD': '1'}, start_new_session=True)
+        command = ['bun', str(ROOT / 'scripts/native-tests.mjs')] if args.test else [str(ROOT / 'scripts/exact-run.sh'), 'run']
+        ui = subprocess.Popen(command, cwd=ROOT,
+                              env={**os.environ, 'XDG_DATA_HOME': str(data_home), 'EXACT_SKIP_BUILD': '1',
+                                   **({'LAZYCONTAINER_TEST_TOKEN': token} if args.test else {})}, start_new_session=True)
         while ui.poll() is None:
             if backend.poll() is not None:
                 raise RuntimeError('Backend stopped unexpectedly.')
