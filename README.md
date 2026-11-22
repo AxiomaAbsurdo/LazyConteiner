@@ -42,7 +42,7 @@ It uses Lazydocker's core, but does not embed the terminal UI or import Lazydock
 - Your existing local Docker daemon and permission to access its Unix socket for live mode.
 - Docker CLI, Compose and a terminal emulator for operations that need those tools.
 
-The `.deb` supplies the compiled GUI, backend, icons and desktop entry. APT resolves its runtime dependencies. **No Go, Rust, Bun or source checkout is needed to use the app.** Debian 12, ARM64, Windows and macOS are not supported by this release artifact. X11 is the primary validated desktop path; the runtime also supports Wayland, with broader desktop testing still welcome.
+The `.deb` supplies the compiled GUI, backend, icons and desktop entry. APT resolves its runtime dependencies. **No Go, Rust, Bun or source checkout is needed to use the app.** This artifact does not support Debian 12 or ARM64 and does not install directly on Windows or macOS. See [Windows and macOS options](#windows-and-macos) below. X11 is the primary validated desktop path; the runtime also supports Wayland, with broader desktop testing still welcome.
 
 ### Download and install v1.0.0
 
@@ -97,6 +97,73 @@ Removal preserves Docker resources and your user configuration/logs.
 - **Settings location:** `~/.config/lazyconteiner/config.json`. Standard XDG overrides are supported.
 
 See [packaging details](docs/PACKAGING.md) for build instructions, file locations and platform limitations. When reporting a bug, remove credentials and private workload information from logs.
+
+## Windows and macOS
+
+**v1.0.0 is a Linux release, not a native Windows or macOS app.** It has no `.exe`, `.msi`, `.app` or `.dmg` installer. Running it inside a suitable Linux environment is technically possible, but **the WSL and VM routes below have not been validated for LazyConteiner**. They are experimental guidance, not additional supported platforms.
+
+| Host computer | Possible route for the current installer | Status |
+| --- | --- | --- |
+| Windows on x86-64 | Debian 13 amd64 in WSL2 with WSLg, or a Debian desktop VM | Experimental; no native Windows build |
+| Intel Mac | Debian 13 amd64 desktop VM | Experimental; no native macOS build |
+| Apple Silicon Mac | Emulated x86-64 Debian desktop environment | Untested, potentially slow; an ARM64 Linux VM cannot use this package |
+| Windows on ARM | No validated route for the current amd64 package | No ARM64 release |
+
+### Windows: try Debian with WSL2 and WSLg
+
+[Microsoft supports Linux GUI apps through WSLg](https://learn.microsoft.com/en-us/windows/wsl/tutorials/gui-apps) on Windows 11 and Windows 10 build 19044 or newer. WSL1 does not provide this GUI path. Docker Desktop has its own [current Windows requirements](https://docs.docker.com/desktop/setup/install/windows-install/), which must also be met for live mode using Docker Desktop.
+
+1. Follow [Microsoft's WSL installation guide](https://learn.microsoft.com/en-us/windows/wsl/install). On an x86-64 Windows computer, open PowerShell as Administrator:
+
+   ```powershell
+   wsl --install -d Debian
+   wsl --update
+   wsl --list --verbose
+   ```
+
+   Restart if prompted and create your Linux user. Confirm Debian shows WSL version `2`; if necessary, use `wsl --set-version Debian 2`. Existing Debian installations need not be reinstalled.
+
+2. In the **Debian terminal**, check the distribution and architecture:
+
+   ```sh
+   cat /etc/os-release
+   dpkg --print-architecture
+   ```
+
+   Continue only with **Debian 13** and **amd64**. The WSL distribution name alone does not guarantee either. If it is an older release, follow Debian's upgrade guidance or provision a matching environment before installing this package.
+
+3. Download the `.deb` and checksum from the [release page](https://github.com/AxiomaAbsurdo/LazyConteiner/releases/tag/v1.0.0) into Debian, then run the [installation commands above](#download-and-install-v100) **inside Debian**, not PowerShell. Start with `lazyconteiner --demo`. WSLg supplies the graphical display; no Docker connection is needed for demo mode. If no window appears, check Microsoft's WSLg troubleshooting before trying live mode.
+
+4. For live mode with Docker Desktop, follow [Docker's WSL2 integration guide](https://docs.docker.com/desktop/features/wsl/): select the **WSL2 engine**, use **Linux containers**, and enable **Settings → Resources → WSL Integration → Debian**. Follow Docker's guidance about conflicts with independently installed engines inside WSL. Verify the actual socket from Debian:
+
+   ```sh
+   test -S /var/run/docker.sock
+   docker --host unix:///var/run/docker.sock info
+   ```
+
+   Both checks must succeed as your normal Linux user. Close the demo, then launch:
+
+   ```sh
+   DOCKER_HOST=unix:///var/run/docker.sock lazyconteiner
+   ```
+
+   The app manages the Linux Docker engine exposed through that integration, not Windows containers. A working `docker.exe` command alone is insufficient: Docker documents that its **Docker VMM** mode provides CLI access without a Unix socket inside WSL. That mode cannot serve this app's direct Docker API connection. TCP, SSH and Windows named-pipe endpoints are not substitutes supported by v1.0.0.
+
+Interactive operations need a Linux graphical terminal inside Debian, such as `xterm`, configured through Settings. Compose paths must be valid from that environment. Window integration, terminal behavior and performance still need WSL-specific testing.
+
+### macOS: use a Debian desktop VM
+
+The Linux `.deb` cannot run directly in macOS, and Docker Desktop for Mac does not make it a macOS application.
+
+1. On an **Intel Mac**, create a **Debian 13 amd64** VM with a graphical desktop using a virtualization tool that supports your Mac. [UTM](https://mac.getutm.app/) is one option. A headless Linux VM alone will not display the app.
+2. Inside the guest desktop, download the release assets and follow the Debian installation instructions. Run `lazyconteiner --demo` first.
+3. For live mode, configure Docker **inside that guest** and verify `docker info` works as the guest's normal user before running `lazyconteiner`.
+
+This VM setup manages the guest's Docker resources. It does **not** automatically manage containers belonging to Docker Desktop on the macOS host; v1.0.0 does not support connecting to that host over TCP or SSH.
+
+On **Apple Silicon (M-series)**, the usual accelerated Linux VM is ARM64, which cannot install this amd64 package. Tools such as UTM can emulate x86-64, so an emulated Debian 13 amd64 desktop is a theoretical route, but it can be slow and has not been validated here. An ARM64 package or a native macOS port would require separate build, launcher, Docker-integration and UI validation work. Neither is included in v1.0.0.
+
+If you try an experimental route, report the host OS, CPU architecture, WSL/VM version, guest Debian version, graphics behavior and Docker socket setup in a GitHub issue. Successful demo rendering does not by itself validate live actions or interactive terminals.
 
 ## Screenshots
 
