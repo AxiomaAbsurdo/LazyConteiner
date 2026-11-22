@@ -1,0 +1,11 @@
+diff --git a/host/linux/src/window.rs b/host/linux/src/window.rs
+--- a/host/linux/src/window.rs
++++ b/host/linux/src/window.rs
+@@ -145,6 +145,7 @@ impl<D: DataSource + Default> App<'_, D> {
+         let (mut presenter, warning) = boot?;
+         warn(warning);
+         presenter.presents_pictures(true);
++        presenter.set_scrollbars(false);
+         presenter.set_live_clock(Some(wall_since(self.started)));
+         presenter.set_system_scheme(dark.unwrap_or_else(|| defaults.unwrap_or_default().dark));
+         let closed = self.closed.clone();

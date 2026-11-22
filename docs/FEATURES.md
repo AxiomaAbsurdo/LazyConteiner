@@ -56,3 +56,9 @@ Start with `make demo`. For each row above and each action/detail in the backend
 6. Record perceived responsiveness and any freeze, stale state, clipping or focus problem. Keep destructive global cleanup Not tested unless intentionally validated in an isolated Docker environment.
 
 Human result record, 2026-11-22: **Clicks and layout work** (direct user response after the updated demo was opened). Per-feature Docker execution, interactive terminals, performance and exhaustive viewport checks remain **Pending**. This response is not a blanket feature sign-off.
+
+## Manual round 1: scrollbar indicators
+
+The user reported that Inventory and other overflowing panels scrolled without visible position indicators. The Linux window host now enables Exact’s existing persistent desktop scrollbars for all overflowing scroll regions and text fields. No custom per-panel state, polling or dependencies were added.
+
+Verification: the physical X11 test fails without the patch and passes with it, checking idle thumb visibility, wheel-position tracking and actual thumb dragging. All 16 existing native interaction/responsive tests pass. Reapplying runtime patches is idempotent. Human validation of this scrollbar fix remains **Pending**; the earlier click/layout confirmation does not cover this later change.

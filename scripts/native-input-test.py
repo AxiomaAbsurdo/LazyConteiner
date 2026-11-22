@@ -134,6 +134,11 @@ def run():
             status = Path(f'/proc/{process.pid}/status').read_text()
             rss = re.search(r'^VmRSS:\s+(\d+) kB', status, re.MULTILINE).group(1)
             screenshot('before.png')
+            # The empty white scroller has a thumb at its top and a track below.
+            # Check before hover: indicators must remain discoverable while idle.
+            pointer(350, 30)
+            thumb, track = pixel(294, 160), pixel(294, 270)
+            assert thumb != track, 'Overflowing list has no visible scrollbar thumb.'
             start = time.monotonic()
             click(100, 35)
             color(250, 30, 0x00FF00, 'Physical click did not activate the button.')
@@ -147,9 +152,20 @@ def run():
             color(250, 110, 0x0000FF, 'Physical keyboard input did not update the field.')
             for _ in range(12):
                 click(100, 230, 5)
+            color(294, 160, track, 'Scrollbar thumb did not leave the top after scrolling.')
+            color(294, 290, thumb, 'Scrollbar thumb did not follow the scroll position.')
             click(100, 290)
             color(250, 350, 0xFFFF00, 'Wheel scrolling did not expose the clickable bottom button.')
             screenshot('after-input.png')
+            pointer(294, 290)
+            t.XTestFakeButtonEvent(display, 1, 1, 0)
+            x.XFlush(display)
+            pointer(294, 150)
+            t.XTestFakeButtonEvent(display, 1, 0, 0)
+            x.XFlush(display)
+            pointer(350, 30)
+            color(294, 160, thumb, 'Dragging the scrollbar thumb did not return to the top.')
+            screenshot('after-scrollbar-drag.png')
             for index, (left, top, width, height) in enumerate([(50, 70, 720, 500), (1200, 120, 600, 460)]):
                 message('_NET_MOVERESIZE_WINDOW', [(1 << 8) | (1 << 9) | (1 << 10) | (1 << 11) | (1 << 12), left, top, width, height])
                 message('_NET_ACTIVE_WINDOW', [2, 0])
@@ -157,7 +173,7 @@ def run():
                 color(250, 30, 0xFF0000 if index == 0 else 0x00FF00,
                       'Click coordinates changed after moving or resizing the window.')
             screenshot('after-move-resize.png')
-            print(f'PASS real X11 click, keyboard, wheel, move, resize; click response <= {elapsed * 1000:.0f} ms (includes input pacing).')
+            print(f'PASS real X11 click, keyboard, wheel, visible scrollbar, thumb drag, move, resize; click response <= {elapsed * 1000:.0f} ms (includes input pacing).')
             print(f'Fixture ready <= {ready * 1000:.0f} ms (includes window discovery/activation); native RSS {rss} KiB.')
             print(f'Native screenshots: {output}')
         finally:
