@@ -1,0 +1,176 @@
+This End User License Agreement (the "Agreement") is a legal agreement between you (the "User" or "you") and [Mythics design, parent company ofPagedone.ioalso termed as  mythic design, “Company," "we," or "us" for this agreement. This Agreement governs your use of the UI blocks, components, and other digital design services (collectively referred to as "Materials") provided by the Company.
+
+1. Grant of License:
+
+
+1.1 License Grant:Subject to the terms of this Agreement, the Company grants you a non-exclusive, non-transferable, revocable license to use the Materials for personal or commercial purposes.
+
+1.2 Scope of Use:The license permits you to use the Materials in digital design projects, including but not limited to software applications, websites, and other digital products and materials.
+
+Restrictions:You may not:
+
+Modify, reverse engineer, decompile, or create derivative works of the Materials.
+
+Sell, sublicense, rent, lease, or distribute the Materials independently.
+
+Remove any proprietary notices or labels on the Materials.
+
+
+
+
+2. Ownership:
+
+
+2.1 Intellectual Property:All rights, title, and interest in and to the Materials, including all intellectual property rights, remain with the Company. This Agreement does not transfer any ownership rights to you.
+
+2.2 No Claim to Assets:You acknowledge that you have no claim or right to any intellectual property assets of the Company beyond the scope of this license.
+
+
+3. Permitted Uses:
+
+
+3.1 Commercial Use:You may use the Materials in commercial projects, subject to the terms of this Agreement.
+
+3.2 Modifications:You may modify the Materials to suit your project's specific requirements, but such modifications do not grant you ownership or additional rights to the Materials. These modifications can only be done with prior approval of mythic design and pagedone.io
+
+3.3 Attribution:If required by the Company, you agree to provide proper attribution for the Materials in your projects.
+
+
+4. Support and Updates:
+
+
+4.1 Support:The Company may provide support services at its discretion, and such support may be subject to additional terms.
+
+4.2 Updates:The Company may provide updates, enhancements, or modifications to the Materials. Your continued use of the Materials after an update constitutes acceptance of the updated terms.
+
+
+5. Termination:
+
+
+5.1 Termination by Company:The Company reserves the right to terminate this Agreement and your access to the Materials at any time, with or without cause.
+
+5.2 Effect of Termination:Upon termination, you must cease all use of the Materials, and any licenses granted to you under this Agreement will be terminated.
+
+
+6. Warranty and Disclaimer:
+
+
+6.1 No Warranty:The Materials are provided "as is" and without warranty of any kind. The Company makes no warranties, express or implied, regarding the accuracy, reliability, or suitability of the Materials.
+
+
+7. Limitation of Liability:
+
+
+7.1 Limitation:In no event shall the Company be liable for any direct, indirect, incidental, special, or consequential damages arising out of or in any way connected with the use of the Materials.
+
+
+8. Governing Law:
+
+
+8.1 Governing Law:This Agreement shall be governed by and construed in accordance with the laws of India.
+
+
+9. Changes to Terms:
+
+
+9.1 Modification:The Company reserves the right to modify this Agreement at any time. Any changes will be effective immediately upon posting on our website.
+
+
+10. Data Collection and Privacy:
+
+
+10.1 Data Collection:The Company may collect certain information from you, as outlined in our Privacy Policy. By using the Materials, you consent to the collection and use of your information in accordance with the Privacy Policy.
+
+10.2 Third-Party Plugins:The Materials may include third-party plugins or integrations. These third parties may collect information about your use of the Materials. We do not control these third parties' data collection practices, and you should review their privacy policies.
+
+
+11. Confidentiality:
+
+
+11.1 Confidentiality:You agree to keep confidential any proprietary or confidential information provided by the Company, including but not limited to code, designs, and documentation.
+
+
+12. Compliance with Laws:
+
+
+12.1 Compliance:You agree to use the Materials in compliance with all applicable laws, regulations, and third-party agreements.
+
+
+13. Indemnification:
+
+
+13.1 Indemnification:You agree to indemnify and hold the Company, its affiliates, and its respective officers, directors, employees, and agents harmless from any claims, damages, or liabilities arising out of your use of the Materials in violation of this Agreement.
+
+
+14. Severability:
+
+
+14.1 Severability:If any provision of this Agreement is found to be invalid, illegal, or unenforceable, the remaining provisions shall remain in full force and effect.
+
+
+15. Entire Agreement:
+
+
+15.1 Entire Agreement:This Agreement constitutes the entire understanding between you and the Company and supersedes all prior agreements, whether oral or written, relating to the subject matter herein.
+
+
+16. Waiver:
+
+
+16.1 Waiver:The failure of the Company to enforce any provision of this Agreement shall not constitute a waiver of that provision or any other provision.
+
+
+17. Contact Us:
+
+
+17.1 Contact Information:If you have any questions, concerns, or requests regarding this Agreement, please contact us atmail@pagedone.io
+
+
+18. Modification of Terms:
+
+
+18.1 Modification:The Company reserves the right to modify this Agreement at any time. Any changes will be effective immediately upon posting on our website. Your continued use of the Materials after such modifications constitutes acceptance of the updated terms.
+
+
+19. Assignment:
+
+
+19.1 Assignment:You may not assign or transfer your rights and obligations under this Agreement without the prior written consent of the Company. The Company may freely assign or transfer its rights and obligations under this Agreement.
+
+
+20. Governing Language:
+
+
+20.1 Governing Language:The governing language of this Agreement is English, and any translations are provided for convenience. In case of a conflict between the English version and any translated version, the English version shall prevail.
+
+
+21. Survival:
+
+
+21.1 Survival:The provisions of Sections 2 (Ownership), 7 (Limitation of Liability), 10 (Data Collection and Privacy), 11 (Confidentiality), 13 (Indemnification), and 19 (Assignment) shall survive the termination of this Agreement.
+
+
+22. Force Majeure:
+
+
+22.1 Force Majeure:The Company shall not be liable for any delay or failure to perform its obligations under this Agreement due to causes beyond its reasonable control, including acts of God, acts of government, acts of terrorism, natural disasters, or internet disruptions.
+
+
+23. Headings:
+
+
+23.1 Headings:The headings in this Agreement are for convenience only and shall not affect the interpretation of its provisions.
+
+
+24. Consent to Electronic Agreement:
+
+
+24.1 Electronic Agreement:By accepting this Agreement electronically or by using the Materials, you acknowledge that you have read, understood, and agreed to be bound by the terms and conditions here in.
+
+
+25. Contact Us:
+
+
+25.1 Contact Information:If you have any questions, concerns, or requests regarding this Agreement, please contact us atmail@pagedone.io
+
+By continuing to use the Materials, you acknowledge that you have read, understood, and agree to be bound by the terms and conditions of this Agreement. Please review this Agreement regularly for updates. If you do not agree with the terms of this Agreement, you should discontinue using pagedone.io

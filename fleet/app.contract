@@ -1,3 +1,4 @@
+use Icon, IconButton from "./icons.contract"
 use Workbench, Settings from "./workbench.contract"
 
 shape RootViewport
@@ -228,7 +229,7 @@ component Fleet
     row testId="app" height="100%" background-color="light-dark(#F5F6F8, #0F1115)" color="light-dark(#16191F, #E6E8EB)"
       column testId="sidebar" role="navigation" aria-label="Main" width=(collapsed ? 48 : 224) min-height=0 flex-shrink=0 padding=12 background-color="#10213F" gap=3
         row testId="brand" min-height=52 align-items="center" gap=10 padding=10
-          text "▦" color="#7DB4FF" font-size=27
+          image "assets/pagedone/containers.svg" width=26 height=26 flex-shrink=0 -exact-tint-color="#7DB4FF" aria-hidden=true
           if not collapsed
             text "LazyConteiner" color="#FFFFFF" font-size=19 font-weight=700
         scroll flex=1 min-height=0 testId="nav-scroll"
@@ -236,48 +237,93 @@ component Fleet
             if not collapsed
               text "OVERVIEW" class=GroupTitle testId="group-overview"
             button class=(page == "dashboard" ? NavActive : NavItem) press=go("dashboard") aria-label="Dashboard" testId="nav-dashboard"
-              text (collapsed ? "▦" : "▦   Dashboard")
+              row align-items="center" gap=10 min-width=0
+                Icon(name="dashboard")
+                if not collapsed
+                  text "Dashboard" flex=1 min-width=0
             button class=(page == "events" ? NavActive : NavItem) press=go("events") aria-label="Events" testId="nav-events"
-              text (collapsed ? "≋" : "≋   Events")
+              row align-items="center" gap=10 min-width=0
+                Icon(name="events")
+                if not collapsed
+                  text "Events" flex=1 min-width=0
             if not collapsed
               text "WORKLOADS" class=GroupTitle testId="group-workloads"
             button class=(page == "stacks" ? NavActive : NavItem) press=go("stacks") aria-label="Stacks" testId="nav-stacks"
-              text (collapsed ? "◇" : `◇   Stacks       ${dash.stacks.length}`)
+              row align-items="center" gap=10 min-width=0
+                Icon(name="stacks")
+                if not collapsed
+                  text "Stacks" flex=1 min-width=0
+                  text `${dash.stacks.length}` font-size=12
             button class=(page == "containers" ? NavActive : NavItem) press=go("containers") aria-label="Containers" testId="nav-containers"
-              text (collapsed ? "□" : `□   Containers       ${dash.attention}`)
+              row align-items="center" gap=10 min-width=0
+                Icon(name="containers")
+                if not collapsed
+                  text "Containers" flex=1 min-width=0
+                  text `${dash.attention}` font-size=12
             button class=NavItem press=go("services") aria-label="Compose services" testId="nav-services"
-              text (collapsed ? "⊞" : "⊞   Compose services")
+              row align-items="center" gap=10 min-width=0
+                Icon(name="services")
+                if not collapsed
+                  text "Compose services" flex=1 min-width=0
             if not collapsed
               text "RESOURCES" class=GroupTitle testId="group-resources"
             button class=(page == "images" ? NavActive : NavItem) press=go("images") aria-label="Images" testId="nav-images"
-              text (collapsed ? "▧" : `▧   Images       ${dash.totals.images}`)
+              row align-items="center" gap=10 min-width=0
+                Icon(name="images")
+                if not collapsed
+                  text "Images" flex=1 min-width=0
+                  text `${dash.totals.images}` font-size=12
             button class=NavItem press=go("volumes") aria-label="Volumes" testId="nav-volumes"
-              text (collapsed ? "⊙" : `⊙   Volumes       ${dash.totals.volumes}`)
+              row align-items="center" gap=10 min-width=0
+                Icon(name="volumes")
+                if not collapsed
+                  text "Volumes" flex=1 min-width=0
+                  text `${dash.totals.volumes}` font-size=12
             button class=NavItem press=go("networks") aria-label="Networks" testId="nav-networks"
-              text (collapsed ? "⋈" : `⋈   Networks       ${dash.totals.networks}`)
+              row align-items="center" gap=10 min-width=0
+                Icon(name="networks")
+                if not collapsed
+                  text "Networks" flex=1 min-width=0
+                  text `${dash.totals.networks}` font-size=12
             button class=NavItem press=go("commands") aria-label="Custom commands" testId="nav-commands"
-              text (collapsed ? "▱" : "▱   Custom commands")
+              row align-items="center" gap=10 min-width=0
+                Icon(name="terminal")
+                if not collapsed
+                  text "Custom commands" flex=1 min-width=0
             if not collapsed
               text "SYSTEM" class=GroupTitle testId="group-system"
             button class=NavItem press=go("host") aria-label="Host and systemd" testId="nav-host"
-              text (collapsed ? "▤" : "▤   Host & systemd")
+              row align-items="center" gap=10 min-width=0
+                Icon(name="host")
+                if not collapsed
+                  text "Host & systemd" flex=1 min-width=0
             button class=NavItem press=go("settings") aria-label="Settings" testId="nav-settings"
-              text (collapsed ? "⚙" : "⚙   Settings")
+              row align-items="center" gap=10 min-width=0
+                Icon(name="settings")
+                if not collapsed
+                  text "Settings" flex=1 min-width=0
         if not collapsed
           column padding=12 gap=5 testId="engine-status"
             text "Docker Engine" color="#DCE6F7" font-weight=600
             text dash.env.detail color="#8FA6CC" font-size=12
         button class=NavItem press=toggleNav aria-label=(collapsed ? "Expand sidebar" : "Collapse sidebar") testId="nav-toggle"
-          text (collapsed ? "›" : "‹   Collapse")
+          row align-items="center" gap=10
+            Icon(name=(collapsed ? "right" : "left"))
+            if not collapsed
+              text "Collapse"
       column flex=1 min-width=0
         row testId="topbar" padding=(viewport.width < 760 ? "10px 12px" : "12px 24px") gap=16 align-items="center" flex-wrap="wrap" background-color="light-dark(#FFFFFF, #161A20)" border-bottom="1px solid light-dark(#E2E5EA, #262B33)"
           text (dash.mode == "demo" ? "DEMO · fixture data" : "local · Debian") font-weight=600 testId="environment"
           text `/ ${pageTitle(page)}` testId="breadcrumb"
           column flex=1
-          button press=refreshNow testId="refresh" disabled=pending(dash)
-            text "Refresh"
-          button press=toggleLive testId="live-toggle" aria-pressed=live
-            text (live ? "Live" : "Paused")
+          button class=IconButton press=refreshNow testId="refresh" disabled=pending(dash) opacity=(pending(dash) ? 0.5 : 1)
+            row align-items="center" gap=8
+              Icon(name="refresh")
+              text "Refresh"
+          button class=IconButton press=toggleLive testId="live-toggle" aria-pressed=live
+            row align-items="center" gap=8
+              Icon(name=(live ? "pause" : "play"))
+              text (live ? "Live" : "Paused")
         scroll flex=1 min-height=0 min-width=0 padding=(viewport.width < 760 ? 12 : 24)
           column gap=20
             row align-items="center" gap=16 flex-wrap="wrap"
@@ -309,23 +355,31 @@ component Fleet
               row display="grid" grid-template-columns=(viewport.width < 560 ? "minmax(0, 1fr)" : viewport.width < 760 ? "repeat(2, minmax(0, 1fr))" : "repeat(4, minmax(0, 1fr))") gap=16
                 button class=Card min-width=0 press=go("containers") testId="kpi-containers"
                   column gap=8 align-items="start"
-                    text "Containers" class=Muted
+                    row align-items="center" gap=8
+                      Icon(name="containers")
+                      text "Containers" class=Muted
                     text `${dash.totals.containers}` font-size=34 font-weight=700
                     text `${dash.totals.running} running · ${dash.totals.failed} failed` font-size=12
                     text `${dash.totals.cleanExit} clean exit` class=Muted
                 button class=Card min-width=0 press=go("images") testId="kpi-images"
                   column gap=8 align-items="start"
-                    text "Images" class=Muted
+                    row align-items="center" gap=8
+                      Icon(name="images")
+                      text "Images" class=Muted
                     text `${dash.totals.images}` font-size=34 font-weight=700
                     text `${dash.totals.imagesSize} · ${dash.totals.imagesUnused} unused` class=Muted
                 button class=Card min-width=0 press=go("volumes") testId="kpi-volumes"
                   column gap=8 align-items="start"
-                    text "Volumes" class=Muted
+                    row align-items="center" gap=8
+                      Icon(name="volumes")
+                      text "Volumes" class=Muted
                     text `${dash.totals.volumes}` font-size=34 font-weight=700
                     text `${dash.totals.volumesUnused} unused` class=Muted
                 button class=Card min-width=0 press=go("networks") testId="kpi-networks"
                   column gap=8 align-items="start"
-                    text "Networks" class=Muted
+                    row align-items="center" gap=8
+                      Icon(name="networks")
+                      text "Networks" class=Muted
                     text `${dash.totals.networks}` font-size=34 font-weight=700
                     text dash.totals.networksDetail class=Muted
               row align-items="center" flex-wrap="wrap" gap=8
@@ -339,7 +393,9 @@ component Fleet
               row gap=16 align-items="start" flex-wrap="wrap"
                 column class=Card flex="2 1 390px" min-width=0 testId="stacks-panel"
                   row gap=10 align-items="center" flex-wrap="wrap"
-                    text "Stacks" font-size=18 font-weight=600 flex=1
+                    row align-items="center" gap=8 flex=1 min-width=0
+                      Icon(name="stacks")
+                      text "Stacks" font-size=18 font-weight=600
                     button press=setFilter("all") aria-pressed=(filter == "all") testId="filter-all"
                       text "All"
                     button press=setFilter("running") aria-pressed=(filter == "running") testId="filter-running"
@@ -350,21 +406,31 @@ component Fleet
                   if dash.selectedCount > 0
                     row gap=8 flex-wrap="wrap" testId="bulk-bar" background-color="light-dark(#E8EFFC, #1A2333)" padding=8
                       text `${dash.selectedCount} selected`
-                      button press=askBulk("start") testId="bulk-start"
-                        text "Start"
-                      button press=askBulk("stop") testId="bulk-stop"
-                        text "Stop"
-                      button press=askBulk("restart") testId="bulk-restart"
-                        text "Restart"
-                      button press=clearSelection testId="bulk-clear"
-                        text "Clear"
+                      button class=IconButton press=askBulk("start") testId="bulk-start"
+                        row align-items="center" gap=8
+                          Icon(name="play")
+                          text "Start"
+                      button class=IconButton press=askBulk("stop") testId="bulk-stop"
+                        row align-items="center" gap=8
+                          Icon(name="stop")
+                          text "Stop"
+                      button class=IconButton press=askBulk("restart") testId="bulk-restart"
+                        row align-items="center" gap=8
+                          Icon(name="refresh")
+                          text "Restart"
+                      button class=IconButton press=clearSelection testId="bulk-clear"
+                        row align-items="center" gap=8
+                          Icon(name="close")
+                          text "Clear"
                   if dash.stacks.length == 0
                     text "No containers match this filter." class=Muted testId="stacks-empty"
                   for stack in dash.stacks key=stack.id
                     StackGroup(stack=stack, select=select, askContainer=askContainer, busy=(pending(prepared) or pending(operated)))
                 column flex="1 1 270px" min-width=0 gap=16
                   column class=Card testId="host-panel"
-                    text "Host" font-size=18 font-weight=600 testId="host-header"
+                    row align-items="center" gap=8
+                      Icon(name="host")
+                      text "Host" font-size=18 font-weight=600 testId="host-header"
                     text (dash.mode == "demo" ? "Sample host · isolated demo" : dash.serviceActive ? "Docker Engine reachable" : "Docker Engine unavailable") class=Muted
                     for meter in dash.host key=meter.label
                       column gap=6 testId=`meter-${meter.label}`
@@ -382,7 +448,9 @@ component Fleet
                         text consumer.cpu font-size=12
                   column class=Card testId="events-panel"
                     row
-                      text "Recent events" font-size=18 font-weight=600 flex=1
+                      row align-items="center" gap=8 flex=1 min-width=0
+                        Icon(name="events")
+                        text "Recent events" font-size=18 font-weight=600
                       button press=go("events") testId="events-all"
                         text "View all"
                     if dash.events.length == 0
@@ -392,15 +460,19 @@ component Fleet
                         text event.name font-family="monospace" font-size=12
                         text `${event.what} · ${event.at}` class=Muted
                   column class=Card testId="cleanup-panel"
-                    text "Cleanup" font-size=18 font-weight=600
+                    row align-items="center" gap=8
+                      Icon(name="trash")
+                      text "Cleanup" font-size=18 font-weight=600
                     for item in dash.cleanup key=item.id
                       row gap=8 align-items="center"
                         input type="checkbox" checked=item.checked change=toggleCleanup(item.id) aria-label=item.label testId=`cleanup-${item.id}`
                         text item.label flex=1 min-width=0 font-size=13
                         text item.size class=Muted
                     text "Volumes are off by default. Removing them deletes data." class=Muted testId="cleanup-warning"
-                    button press=dryRun testId="cleanup-dryrun"
-                      text "Preview cleanup"
+                    button class=IconButton press=dryRun testId="cleanup-dryrun"
+                      row align-items="center" gap=8
+                        Icon(name="trash")
+                        text "Preview cleanup"
                     text "Preview removes nothing. Use resource pages for confirmed cleanup." class=Muted
             else if page == "settings"
               Settings()
@@ -431,10 +503,14 @@ component Fleet
               text quickTargets font-family="monospace" font-size=12 white-space="pre-wrap" overflow-wrap="anywhere"
               text "Stopping or restarting containers can interrupt their services." class=Muted
           row gap=8 flex-wrap="wrap" flex-shrink=0 testId="quick-modal-actions"
-            button press=execute testId="operation-confirm" disabled=pending(operated)
-              text "Confirm"
-            button press=cancelOperation testId="operation-cancel"
-              text "Cancel"
+            button class=IconButton press=execute testId="operation-confirm" disabled=pending(operated) opacity=(pending(operated) ? 0.5 : 1)
+              row align-items="center" gap=8
+                Icon(name="check")
+                text "Confirm"
+            button class=IconButton press=cancelOperation testId="operation-cancel"
+              row align-items="center" gap=8
+                Icon(name="close")
+                text "Cancel"
 
 component AlertCard
   props
@@ -446,14 +522,14 @@ component AlertCard
   view
     column class=Card background-color="light-dark(#FFF8F0, #2A1C14)" testId=`alert-${alert.id}`
       row gap=12 align-items="center" flex-wrap="wrap"
-        text "!" font-size=22 color="light-dark(#8A4500, #F0A35E)"
+        image "assets/pagedone/warning.svg" width=24 height=24 flex-shrink=0 aria-hidden=true -exact-tint-color="light-dark(#8A4500, #F0A35E)"
         column flex="1 1 180px" min-width=0 gap=5
           text alert.title font-weight=600 testId=`alert-${alert.id}-title`
           text alert.hint class=Muted
         button press=toggleOpen testId=`alert-${alert.id}-toggle` aria-expanded=open
           text (open ? "Hide" : `Show ${alert.items.length}`)
-        button press=dismiss(alert.id) aria-label="Dismiss alert" testId=`alert-${alert.id}-dismiss`
-          text "×"
+        button class=IconButton press=dismiss(alert.id) aria-label="Dismiss alert" testId=`alert-${alert.id}-dismiss`
+          Icon(name="close")
       if open
         for item in alert.items key=item.id
           text `${item.name} · exit ${item.exitCode}` font-family="monospace" font-size=12 testId=`alert-${alert.id}-item-${item.id}`
@@ -470,8 +546,8 @@ component StackGroup
   view
     column gap=6 testId=`stack-${stack.id}`
       row gap=8 align-items="center" background-color="light-dark(#F5F6F8, #22262E)" padding=10
-        button press=toggleStack aria-label=`Toggle ${stack.name}` aria-expanded=open testId=`stack-${stack.id}-toggle`
-          text (open ? "⌄" : "›")
+        button class=IconButton press=toggleStack aria-label=`Toggle ${stack.name}` aria-expanded=open testId=`stack-${stack.id}-toggle`
+          Icon(name=(open ? "down" : "right"))
         column flex=1 min-width=0 gap=3
           text stack.name font-weight=600 overflow-wrap="anywhere" testId=`stack-${stack.id}-name`
           text `${stack.running} of ${stack.total} running` class=Muted
@@ -483,6 +559,8 @@ component StackGroup
               input type="checkbox" checked=container.selected change=select(container.id) aria-label=`Select ${container.name}` testId=`row-${container.id}-select`
               text container.name font-family="monospace" font-size=13 flex=1 min-width=150 testId=`row-${container.id}-name`
               text (container.state == "running" ? "Running" : `${container.state} (${container.exitCode})`) class=Status color=(container.state == "running" ? "light-dark(#1A7F37, #7EE2A0)" : "light-dark(#8A4500, #F0A35E)") testId=`row-${container.id}-state`
-              button press=askContainer(container.id, container.name, container.state == "running" ? "restart" : "start") disabled=busy testId=`row-${container.id}-action`
-                text (container.state == "running" ? "Restart" : "Start")
+              button class=IconButton press=askContainer(container.id, container.name, container.state == "running" ? "restart" : "start") disabled=busy testId=`row-${container.id}-action` opacity=(busy ? 0.5 : 1)
+                row align-items="center" gap=8
+                  Icon(name=(container.state == "running" ? "refresh" : "play"))
+                  text (container.state == "running" ? "Restart" : "Start")
             text container.ports class=Muted padding-left=26 testId=`row-${container.id}-ports`

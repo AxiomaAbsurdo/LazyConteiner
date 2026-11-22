@@ -1,3 +1,5 @@
+use Icon, IconButton, operationIcon, detailIcon from "./icons.contract"
+
 shape WindowSize
   width: number
   height: number
@@ -183,10 +185,14 @@ component Workbench
       row gap=12 align-items="center" flex-wrap="wrap"
         input value=query input=search placeholder="Filter by name, ID or project" aria-label="Filter inventory" flex="1 1 240px" min-width=0 testId="inventory-search"
         text `${visible.length} of ${inventory.items.length}` class=Secondary testId="inventory-count"
-        button press=selectVisible disabled=(visible.length == 0) testId="inventory-select-all"
-          text "Select all visible"
-        button press=refreshNow disabled=pending(inventory) testId="inventory-refresh"
-          text "Refresh"
+        button class=IconButton press=selectVisible disabled=(visible.length == 0) testId="inventory-select-all" opacity=((visible.length == 0) ? 0.5 : 1)
+          row align-items="center" gap=8
+            Icon(name="select")
+            text "Select all visible"
+        button class=IconButton press=refreshNow disabled=pending(inventory) testId="inventory-refresh" opacity=(pending(inventory) ? 0.5 : 1)
+          row align-items="center" gap=8
+            Icon(name="refresh")
+            text "Refresh"
       if failed(inventory)
         text "Inventory response could not be read. Refresh to retry." color="light-dark(#8A4500, #F0A35E)" testId="inventory-runtime-error"
       if inventory.error != ""
@@ -200,8 +206,10 @@ component Workbench
       if selectedIds.length > 0
         row class=Panel gap=8 align-items="center"
           text `${selectedIds.length} selected for bulk actions` flex=1 testId="inventory-selection"
-          button press=clear testId="inventory-clear"
-            text "Clear"
+          button class=IconButton press=clear testId="inventory-clear"
+            row align-items="center" gap=8
+              Icon(name="close")
+              text "Clear"
       row display="grid" grid-template-columns=(wide ? "minmax(220px, 1fr) minmax(0, 2fr)" : "minmax(0, 1fr)") gap=16 align-items="start" testId="workbench-grid"
         column class=Panel testId="inventory-panel"
           text (kind == "projects" ? "Compose projects" : kind == "services" ? "Compose services" : kind == "commands" ? "Custom commands" : kind == "host" ? "Docker Engine" : "Inventory") role="heading" aria-level=2 font-size=18 font-weight=600
@@ -224,16 +232,22 @@ component Workbench
           row gap=8 align-items="center" flex-wrap="wrap"
             text (selectedName != "" ? selectedName : "Select a resource") font-size=18 font-weight=600 flex=1 min-width=0 overflow-wrap="anywhere" testId="detail-title"
             if selectedId != ""
-              button press=refreshNow disabled=pending(detail) testId="detail-refresh"
-                text "Refresh detail"
+              button class=IconButton press=refreshNow disabled=pending(detail) testId="detail-refresh" opacity=(pending(detail) ? 0.5 : 1)
+                row align-items="center" gap=8
+                  Icon(name="refresh")
+                  text "Refresh detail"
           if selectedId != ""
             row gap=6 flex-wrap="wrap" role="tablist" aria-label="Resource details"
               for view in inventory.views key=view.id
-                button press=chooseTab(view.id) aria-pressed=(activeTab == view.id) testId=`view-${view.id}`
-                  text view.label
+                button class=IconButton press=chooseTab(view.id) aria-pressed=(activeTab == view.id) testId=`view-${view.id}` background-color=(activeTab == view.id ? "light-dark(#E8EFFC, #1F3A6B)" : "light-dark(#FFFFFF, #22262E)")
+                  row align-items="center" gap=8
+                    Icon(name=detailIcon(view.id))
+                    text view.label
             if activeTab == "env" or activeTab == "inspect" or activeTab == "config"
-              button press=toggleReveal testId="detail-reveal" aria-pressed=reveal
-                text (reveal ? "Mask sensitive values" : "Reveal sensitive values")
+              button class=IconButton press=toggleReveal testId="detail-reveal" aria-pressed=reveal
+                row align-items="center" gap=8
+                  Icon(name=(reveal ? "hide" : "view"))
+                  text (reveal ? "Mask sensitive values" : "Reveal sensitive values")
             if failed(detail)
               text "Detail response could not be read. Refresh to retry." color="light-dark(#8A4500, #F0A35E)" testId="detail-runtime-error"
             if pending(detail) and not currentDetail
@@ -262,8 +276,10 @@ component Workbench
                 text (showAllActions ? "Hide destructive actions" : "Show destructive actions")
             row gap=8 flex-wrap="wrap" testId="resource-actions"
               for action in shownActions key=action.id
-                button press=prepare(action.id, action.label, action.input) disabled=busy destructive=action.destructive testId=`action-${action.id}`
-                  text action.label
+                button class=IconButton press=prepare(action.id, action.label, action.input) disabled=busy destructive=action.destructive testId=`action-${action.id}` opacity=(busy ? 0.5 : 1)
+                  row align-items="center" gap=8
+                    Icon(name=operationIcon(action.id, action.destructive))
+                    text action.label
             text "Every action shows its exact targets before execution. Interactive sessions open your native terminal." class=Secondary
       if actionText != "" or jobId != ""
         column class=Panel testId="action-output"
@@ -286,10 +302,14 @@ component Workbench
                   text target.id class=Monospace
               text "Destructive actions can permanently delete data. Stopping services interrupts their users." class=Secondary
           row gap=8 flex-wrap="wrap" flex-shrink=0 testId="resource-modal-actions"
-            button press=execute disabled=busy testId="resource-confirm"
-              text "Execute operation"
-            button press=cancelPreview testId="resource-cancel"
-              text "Cancel"
+            button class=IconButton press=execute disabled=busy testId="resource-confirm" opacity=(busy ? 0.5 : 1)
+              row align-items="center" gap=8
+                Icon(name="check")
+                text "Execute operation"
+            button class=IconButton press=cancelPreview testId="resource-cancel"
+              row align-items="center" gap=8
+                Icon(name="close")
+                text "Cancel"
       dialog id="arguments" aria-label="Command arguments"
         column class=Panel width=(viewport.width < 600 ? viewport.width - 64 : 520) height=(viewport.height < 600 ? viewport.height - 96 : 360) testId="arguments-modal"
           text "Command arguments" role="heading" aria-level=2
@@ -299,10 +319,14 @@ component Workbench
               text "Enter a JSON array of executable and arguments. No shell interpolation is applied." class=Secondary
               textarea value=argv input=editArguments rows=4 min-width=0 aria-label="Arguments as JSON" testId="action-arguments"
           row gap=8 flex-wrap="wrap" flex-shrink=0
-            button press=previewArguments testId="arguments-preview"
-              text "Review targets"
-            button press=cancelArguments testId="arguments-cancel"
-              text "Cancel"
+            button class=IconButton press=previewArguments testId="arguments-preview"
+              row align-items="center" gap=8
+                Icon(name="inspect")
+                text "Review targets"
+            button class=IconButton press=cancelArguments testId="arguments-cancel"
+              row align-items="center" gap=8
+                Icon(name="close")
+                text "Cancel"
 
 component Settings
   resource viewport = exactViewport() as shape WindowSize
@@ -347,25 +371,37 @@ component Settings
         text "Configuration saved." testId="config-saved"
       if editing
         textarea value=draft input=edit rows=18 aria-label="Configuration JSON" font-family="monospace" testId="config-editor"
-        row gap=8
-          button press=askSave disabled=pending(saved) testId="config-save"
-            text "Review and save"
-          button press=cancelEdit testId="config-cancel"
-            text "Cancel"
+        row gap=8 flex-wrap="wrap"
+          button class=IconButton press=askSave disabled=pending(saved) testId="config-save" opacity=(pending(saved) ? 0.5 : 1)
+            row align-items="center" gap=8
+              Icon(name="check")
+              text "Review and save"
+          button class=IconButton press=cancelEdit testId="config-cancel"
+            row align-items="center" gap=8
+              Icon(name="close")
+              text "Cancel"
       else
         scroll height=350 min-width=0
           text config.text class=Monospace testId="config-text"
-        row gap=8
-          button press=begin disabled=(config.error != "" or pending(config)) testId="config-edit"
-            text "Edit configuration"
-          button press=reloadConfig testId="config-refresh"
-            text "Reload"
+        row gap=8 flex-wrap="wrap"
+          button class=IconButton press=begin disabled=(config.error != "" or pending(config)) testId="config-edit" opacity=((config.error != "" or pending(config)) ? 0.5 : 1)
+            row align-items="center" gap=8
+              Icon(name="edit")
+              text "Edit configuration"
+          button class=IconButton press=reloadConfig testId="config-refresh"
+            row align-items="center" gap=8
+              Icon(name="refresh")
+              text "Reload"
       dialog id="save-config" role="dialog" aria-label="Save configuration"
         column class=Panel width=(viewport.width < 600 ? viewport.width - 64 : 520) height=180 testId="config-modal"
           scroll flex=1 min-height=0 min-width=0
             text "Save this local configuration? Custom command definitions will become executable from the app." overflow-wrap="anywhere"
           row gap=8 flex-wrap="wrap" flex-shrink=0
-            button press=save testId="config-confirm"
-              text "Save configuration"
-            button press=cancelSave testId="config-dismiss"
-              text "Cancel"
+            button class=IconButton press=save testId="config-confirm"
+              row align-items="center" gap=8
+                Icon(name="check")
+                text "Save configuration"
+            button class=IconButton press=cancelSave testId="config-dismiss"
+              row align-items="center" gap=8
+                Icon(name="close")
+                text "Cancel"

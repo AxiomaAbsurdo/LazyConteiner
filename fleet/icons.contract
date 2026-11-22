@@ -1,0 +1,14 @@
+// Original Pagedone SVGs; source mapping and license are in docs/ICONS.md.
+// SVG faces are custom content in Exact; retain explicit button affordances.
+style IconButton
+  appearance="none" min-height=36 box-sizing="border-box" padding="7px 12px" border="1px solid light-dark(#90959D, #737B89)" border-radius=8 background-color="light-dark(#FFFFFF, #22262E)" color="light-dark(#16191F, #E6E8EB)"
+
+component Icon
+  props
+    name: string
+  view
+    image `assets/pagedone/${name}.svg` width=20 height=20 flex-shrink=0 object-fit="contain" -exact-tint-color="currentColor" aria-hidden=true
+
+fn operationIcon(id: string, destructive: bool): string = id == "kill" ? "stop" : destructive ? "trash" : id == "start" or id == "up" or id == "up-attached" or id == "unpause" or id == "run" ? "play" : id == "stop" ? "stop" : id == "pause" ? "pause" : id == "restart" or id == "recreate" ? "refresh" : id == "build" or id == "rebuild" ? "build" : id == "pull" ? "download" : id == "open-browser" ? "browser" : id == "logs-follow" ? "logs" : "terminal"
+
+fn detailIcon(id: string): string = id == "stats" ? "stats" : id == "env" ? "env" : id == "inspect" ? "inspect" : id == "history" ? "history" : id == "config" ? "settings" : id == "info" ? "info" : id == "disk" ? "volumes" : id == "top" or id == "events" ? "events" : "logs"

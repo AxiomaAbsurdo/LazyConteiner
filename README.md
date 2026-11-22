@@ -52,4 +52,6 @@ Docker socket access is root-equivalent. Run as your normal desktop user, not wi
 
 ## References
 
+Frontend icons come from [Pagedone](https://pagedone.io/icons). The selected SVGs load locally; [icon mapping and license](docs/ICONS.md) are included.
+
 `BetaB.dc.html`, `support.js` and `vendor/react*.js` belong to the original artboard, not the native runtime. Lazydocker's MIT notice is preserved in `backend/LICENSE.lazydocker`. [WORKFLOW.md](WORKFLOW.md) records standing development skill preferences.
