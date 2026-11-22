@@ -16,6 +16,7 @@ if [[ $(git -C "$checkout" rev-parse HEAD) != "$revision" ]]; then
   exit 1
 fi
 
+EXACT="$checkout" bash "$root/scripts/exact-patches.sh"
 cd -- "$checkout"
 bun install --frozen-lockfile
 # Native Linux needs neither the game SDK nor Android/Apple cross toolchains.
