@@ -89,3 +89,11 @@ Apply Karpathy guidelines and relevant installed Matt Pocock skills to coding. U
 - Read-only live Docker inventory succeeded. Lifecycle integration was exercised only against demo fixtures.
 - Port 17878 avoids the existing service on 8787. Launcher shutdown removes its backend process and session token.
 - Secondary resource pages, metrics, events, logs, and destructive cleanup remain explicitly deferred in README and UI.
+
+## Arch bundle for existing v1.0.0
+
+Add a checksum-pinned `lazyconteiner-bin` package through Arch's PKGBUILD/makepkg
+workflow. Preserve released GUI/backend bytes, adapt only distro integration,
+verify in isolated Arch containers, and attach package/recipe/checksums to the
+existing v1.0.0 GitHub Release. No new application version, tag or AUR publication.
+Validation and remaining desktop/live-Docker checks belong in docs/ARCH-VALIDATION.md.

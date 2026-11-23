@@ -14,3 +14,5 @@ Use small, locally testable iterations. Preserve the design in `elements-wirefra
 - Use `debian-linux-triage` from `github/awesome-copilot` and `debian-ubuntu` from `iuliandita/skills` for Debian packaging and host troubleshooting. Inspect the target release, simulate APT changes, and verify package behavior before installation.
 
 The first iteration used five worker tasks in waves, limited to three concurrent workers plus the supervisor. `plan.md` records scope and acceptance.
+
+Use `arch-linux-triage` from `github/awesome-copilot` for Arch packaging and troubleshooting. Follow Arch rolling-release update practices, build with non-root makepkg, inspect namcap diagnostics, and distinguish container validation from a physical desktop pass.

@@ -1,0 +1,16 @@
+--- a/usr/bin/lazyconteiner
++++ b/usr/bin/lazyconteiner
+@@ -1,4 +1,4 @@
+-#!/usr/bin/python3
++#!/usr/bin/python
+ """Launch the installed native UI and its private, unprivileged Docker bridge."""
+ import argparse
+ import fcntl
+@@ -77,6 +77,7 @@
+     demo = args.demo or args.smoke_test
+     env = {key: value for key, value in os.environ.items() if not key.startswith('EXACT_')}
+     env.update(EXACT_ASSETS=str(LIB), EXACT_SIZE='1440x900')
++    env['PATH'] = str(LIB / 'bin') + os.pathsep + env.get('PATH', os.defpath)
+ 
+     def interrupted(signum, frame):
+         raise KeyboardInterrupt

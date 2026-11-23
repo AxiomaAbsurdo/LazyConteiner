@@ -6,7 +6,7 @@
 
 **A GUI for containers—for those days when you’re not feeling nerdy enough for the terminal.**
 
-LazyConteiner is a native desktop app for managing **local Docker containers on Debian Linux**. See what is running, inspect logs and resources, manage Compose projects, and review actions before executing them—all from one interface.
+LazyConteiner is a native desktop app for managing **local Docker containers on Linux**. Installers are available for Debian 13 amd64 and Arch Linux x86_64. See what is running, inspect logs and resources, manage Compose projects, and review actions before executing them—all from one interface.
 
 Built with [Expo Exact](https://github.com/expo/exact) and [Lazydocker's Go core](https://github.com/jesseduffield/lazydocker). It runs as your desktop user and works with your existing Docker installation.
 
@@ -38,7 +38,7 @@ It uses Lazydocker's core, but does not embed the terminal UI or import Lazydock
 
 ### Requirements
 
-- **Debian 13 (trixie), amd64/x86-64**, with a desktop session.
+- **Debian 13 (trixie), amd64/x86-64**, or **up-to-date Arch Linux x86_64**, with a desktop session. The commands below cover Debian; see [Arch Linux installation](#arch-linux).
 - Your existing local Docker daemon and permission to access its Unix socket for live mode.
 - Docker CLI, Compose and a terminal emulator for operations that need those tools.
 
@@ -97,6 +97,30 @@ Removal preserves Docker resources and your user configuration/logs.
 - **Settings location:** `~/.config/lazyconteiner/config.json`. Standard XDG overrides are supported.
 
 See [packaging details](docs/PACKAGING.md) for build instructions, file locations and platform limitations. When reporting a bug, remove credentials and private workload information from logs.
+
+## Arch Linux
+
+An Arch bundle is available on the **same v1.0.0 release**; this is an additional
+distribution package, not a new application version. Download the
+`lazyconteiner-bin-1.0.0-1-x86_64.pkg.tar.zst` asset and its `.sha256` file from the
+[release page](https://github.com/AxiomaAbsurdo/LazyConteiner/releases/tag/v1.0.0).
+On an up-to-date Arch system:
+
+```sh
+sha256sum -c lazyconteiner-bin-1.0.0-1-x86_64.pkg.tar.zst.sha256
+sudo pacman -U ./lazyconteiner-bin-1.0.0-1-x86_64.pkg.tar.zst
+lazyconteiner --demo
+```
+
+Follow Arch's normal full-system update workflow (`sudo pacman -Syu`); partial
+upgrades are unsupported. The bundle preserves the released GUI/backend binaries,
+uses Arch dependencies and supplies a private `xterm` compatibility alias for the
+v1 default terminal command. It does not configure Docker or change your groups.
+It is distributed through GitHub, **not an official Arch repository or AUR package**.
+
+Read the [Arch guide](docs/ARCH.md) for Docker prerequisites, building from the
+`PKGBUILD`, removal, rollback and the actual [validation scope](docs/ARCH-VALIDATION.md).
+The release also includes the source packaging recipe and its checksum.
 
 ## Windows and macOS
 

@@ -1,0 +1,59 @@
+# Maintainer: AxiomaAbsurdo <AxiomaAbsurdo@users.noreply.github.com>
+pkgname=lazyconteiner-bin
+pkgver=1.0.0
+pkgrel=1
+pkgdesc='Native desktop interface for local Docker and Compose, using Exact and Lazydocker'
+arch=('x86_64')
+url='https://github.com/AxiomaAbsurdo/LazyConteiner'
+license=('MIT' 'LicenseRef-Pagedone' 'LicenseRef-Bundled-Dependencies')
+depends=('glibc>=2.39' 'libgcc' 'libstdc++' 'python' 'bash' 'fontconfig' 'ttf-dejavu'
+         'hicolor-icon-theme' 'libx11' 'libxcb' 'libxrandr' 'libxi'
+         'libxcursor' 'libxkbcommon' 'libxkbcommon-x11' 'wayland' 'xterm')
+makedepends=('desktop-file-utils')
+optdepends=('docker: connect to an existing local Docker engine and run CLI operations'
+            'docker-compose: Compose project and service operations'
+            'xdg-utils: open published container URLs in a browser')
+provides=("lazyconteiner=$pkgver")
+conflicts=('lazyconteiner')
+options=('!strip' '!debug')
+source=("$url/releases/download/v$pkgver/lazyconteiner_${pkgver}-1_amd64.deb"
+        'arch-launcher.patch'
+        'ARCH.md')
+noextract=("lazyconteiner_${pkgver}-1_amd64.deb")
+sha256sums=('f2385cf41143d1672fb1875d8646638e7d37c16d998ff61a7e7ef185b65bcaf8'
+            '41600bb01935183fb5010a5febf3f52d517914fb67015066cd5ea7013e7351ec'
+            'dabcddb608d3e5fb222357c7d61041cae26553590dd0cfdac808295bfd8ae4a8')
+
+prepare() {
+  bsdtar -xf "lazyconteiner_${pkgver}-1_amd64.deb" data.tar.xz
+  mkdir -p upstream
+  bsdtar -xf data.tar.xz -C upstream
+  cd upstream
+  patch -Np1 -i "$srcdir/arch-launcher.patch"
+}
+
+check() {
+  desktop-file-validate "$srcdir/upstream/usr/share/applications/dev.axioma.lazyconteiner.desktop"
+  test -x "$srcdir/upstream/usr/lib/lazyconteiner/ui"
+  test -x "$srcdir/upstream/usr/lib/lazyconteiner/backend"
+}
+
+package() {
+  local upstream="$srcdir/upstream/usr"
+  install -d "$pkgdir/usr/bin" "$pkgdir/usr/lib" "$pkgdir/usr/share"
+  install -m755 "$upstream/bin/lazyconteiner" "$pkgdir/usr/bin/lazyconteiner"
+  cp -a "$upstream/lib/lazyconteiner" "$pkgdir/usr/lib/"
+  cp -a "$upstream/share/"{applications,icons,man,doc} "$pkgdir/usr/share/"
+  # Preserve the v1 application binaries; adapt only the distro launcher and metadata.
+  printf '%s\n' "$pkgver" > "$pkgdir/usr/lib/lazyconteiner/VERSION"
+  install -d "$pkgdir/usr/lib/lazyconteiner/bin"
+  printf '#!/bin/sh\nexec /usr/bin/xterm -fa "DejaVu Sans Mono" "$@"\n' > "$pkgdir/usr/lib/lazyconteiner/bin/x-terminal-emulator"
+  chmod 755 "$pkgdir/usr/lib/lazyconteiner/bin/x-terminal-emulator"
+  install -Dm644 "$srcdir/ARCH.md" "$pkgdir/usr/share/doc/lazyconteiner/ARCH.md"
+  local notices="$pkgdir/usr/share/doc/lazyconteiner"
+  install -Dm644 "$notices/licenses/LazyConteiner" "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+  install -m644 "$notices/LICENSE-pagedone.txt" "$pkgdir/usr/share/licenses/$pkgname/LicenseRef-Pagedone"
+  install -m644 "$notices/THIRD-PARTY.txt" "$pkgdir/usr/share/licenses/$pkgname/LicenseRef-Bundled-Dependencies"
+  ln -s ../../doc/lazyconteiner/licenses "$pkgdir/usr/share/licenses/$pkgname/licenses"
+  ln -s ../../doc/lazyconteiner/dependency-notices.json "$pkgdir/usr/share/licenses/$pkgname/dependency-notices.json"
+}

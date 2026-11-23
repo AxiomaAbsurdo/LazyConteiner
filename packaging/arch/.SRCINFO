@@ -1,0 +1,43 @@
+pkgbase = lazyconteiner-bin
+	pkgdesc = Native desktop interface for local Docker and Compose, using Exact and Lazydocker
+	pkgver = 1.0.0
+	pkgrel = 1
+	url = https://github.com/AxiomaAbsurdo/LazyConteiner
+	arch = x86_64
+	license = MIT
+	license = LicenseRef-Pagedone
+	license = LicenseRef-Bundled-Dependencies
+	makedepends = desktop-file-utils
+	depends = glibc>=2.39
+	depends = libgcc
+	depends = libstdc++
+	depends = python
+	depends = bash
+	depends = fontconfig
+	depends = ttf-dejavu
+	depends = hicolor-icon-theme
+	depends = libx11
+	depends = libxcb
+	depends = libxrandr
+	depends = libxi
+	depends = libxcursor
+	depends = libxkbcommon
+	depends = libxkbcommon-x11
+	depends = wayland
+	depends = xterm
+	optdepends = docker: connect to an existing local Docker engine and run CLI operations
+	optdepends = docker-compose: Compose project and service operations
+	optdepends = xdg-utils: open published container URLs in a browser
+	provides = lazyconteiner=1.0.0
+	conflicts = lazyconteiner
+	noextract = lazyconteiner_1.0.0-1_amd64.deb
+	options = !strip
+	options = !debug
+	source = https://github.com/AxiomaAbsurdo/LazyConteiner/releases/download/v1.0.0/lazyconteiner_1.0.0-1_amd64.deb
+	source = arch-launcher.patch
+	source = ARCH.md
+	sha256sums = f2385cf41143d1672fb1875d8646638e7d37c16d998ff61a7e7ef185b65bcaf8
+	sha256sums = 41600bb01935183fb5010a5febf3f52d517914fb67015066cd5ea7013e7351ec
+	sha256sums = dabcddb608d3e5fb222357c7d61041cae26553590dd0cfdac808295bfd8ae4a8
+
+pkgname = lazyconteiner-bin
